@@ -16,6 +16,22 @@ export function openForm() {
 export function closeForm() {
   document.getElementById('addEntryPanel').classList.remove('open');
   document.getElementById('addLogBtn').textContent = '+ New entry';
+  setEditMode(false);
+}
+
+/**
+ * Set the form to edit mode or back to create mode.
+ */
+export function setEditMode(editing) {
+  const title = document.getElementById('addEntryTitle');
+  const btn = document.getElementById('submitBtn');
+  if (editing) {
+    title.textContent = 'Edit log entry';
+    btn.textContent = 'Save changes';
+  } else {
+    title.textContent = 'New log entry';
+    btn.textContent = 'Log entry';
+  }
 }
 
 /**
@@ -218,6 +234,65 @@ export function renderLabelsFormRow(instrument, pendingLabels, onToggle) {
       }
     }
 
+    row.appendChild(btn);
+  });
+}
+
+/**
+ * Render label editor for edit mode — shows raw deltas (what this entry adds/removes).
+ * @param {Object} pendingLabels - map of key → 'add'|'remove'
+ * @param {Function} onToggle - callback(key, action)
+ */
+export function renderLabelsEditRow(pendingLabels, onToggle) {
+  const row = document.getElementById('labelsFormRow');
+  row.innerHTML = '';
+
+  // "Added" section
+  const addedLabel = document.createElement('span');
+  addedLabel.className = 'labels-empty';
+  addedLabel.textContent = 'Added:';
+  row.appendChild(addedLabel);
+
+  LABELS.forEach(({ key, label, cls }) => {
+    const isAdded = pendingLabels[key] === 'add';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `label-toggle ${cls}`;
+    if (isAdded) {
+      btn.classList.add('active', 'add');
+      btn.textContent = label;
+      btn.title = 'Click to remove from this entry';
+      btn.onclick = () => onToggle(key, 'cancel');
+    } else {
+      btn.textContent = label;
+      btn.title = 'Click to add to this entry';
+      btn.onclick = () => onToggle(key, 'add');
+    }
+    row.appendChild(btn);
+  });
+
+  // Separator
+  const sep = document.createElement('span');
+  sep.className = 'labels-empty';
+  sep.textContent = 'Removed:';
+  sep.style.marginLeft = '12px';
+  row.appendChild(sep);
+
+  LABELS.forEach(({ key, label, cls }) => {
+    const isRemoved = pendingLabels[key] === 'remove';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `label-toggle ${cls}`;
+    if (isRemoved) {
+      btn.classList.add('active', 'remove');
+      btn.textContent = label;
+      btn.title = 'Click to keep on this entry';
+      btn.onclick = () => onToggle(key, 'cancel');
+    } else {
+      btn.textContent = label;
+      btn.title = 'Click to remove via this entry';
+      btn.onclick = () => onToggle(key, 'remove');
+    }
     row.appendChild(btn);
   });
 }

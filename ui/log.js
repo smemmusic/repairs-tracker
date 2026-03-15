@@ -5,9 +5,10 @@ import { getContributorName } from '../data/api.js';
  * Render all log entries for an instrument.
  * @param {Object} instrument - the instrument with its log array
  * @param {Object} capabilities - current session capabilities
- * @param {Function|null} onDelete - callback(logEntryId) when delete is clicked, null to hide delete buttons
+ * @param {Function|null} onEdit - callback(logEntryId) when edit is clicked
+ * @param {Function|null} onDelete - callback(logEntryId) when delete is clicked
  */
-export function renderLog(instrument, capabilities, onDelete) {
+export function renderLog(instrument, capabilities, onEdit, onDelete) {
   const area = document.getElementById('logEntries');
   area.innerHTML = '';
 
@@ -56,8 +57,10 @@ export function renderLog(instrument, capabilities, onDelete) {
       ? getContributorName(entry.contributor_id)
       : 'Visitor';
 
+    const editBtn = (capabilities.editLogEntry && onEdit)
+      ? `<button class="log-action-btn log-edit-btn" title="Edit entry">✎</button>` : '';
     const deleteBtn = (capabilities.deleteLogEntry && onDelete)
-      ? `<button class="log-delete-btn" data-id="${entry.id}" title="Delete entry">✕</button>` : '';
+      ? `<button class="log-action-btn log-delete-btn" title="Delete entry">✕</button>` : '';
 
     const d = new Date(entry.date);
     const div = document.createElement('div');
@@ -71,12 +74,15 @@ export function renderLog(instrument, capabilities, onDelete) {
         <div class="log-top">
           <span class="entry-type-tag ${entry.type}">${entry.type.replace('_', ' ')}</span>
           ${statusTag}${locationTag}${labelTags}${scoreTag}
-          ${deleteBtn}
+          ${editBtn}${deleteBtn}
         </div>
         <div class="log-notes">${entry.notes}</div>
         ${attachHtml}
       </div>`;
 
+    if (capabilities.editLogEntry && onEdit) {
+      div.querySelector('.log-edit-btn').addEventListener('click', () => onEdit(entry.id));
+    }
     if (capabilities.deleteLogEntry && onDelete) {
       div.querySelector('.log-delete-btn').addEventListener('click', () => onDelete(entry.id));
     }

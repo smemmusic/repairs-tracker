@@ -122,8 +122,10 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 .log-label-tag.removed { color: var(--text3); border-color: var(--border2); text-decoration: line-through; }
 .log-score-tag { font-family: var(--mono); font-size: var(--fs-sm); color: var(--text3); border: 1px solid var(--border2); padding: 2px 6px; border-radius: 2px; }
 .log-location-tag { font-family: var(--mono); font-size: var(--fs-sm); color: var(--text3); border: 1px solid var(--border2); padding: 2px 6px; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
-.log-delete-btn { font-family: var(--mono); font-size: var(--fs-md); color: var(--text3); background: none; border: 1px solid var(--border2); padding: 1px 6px; border-radius: 2px; cursor: pointer; margin-left: auto; opacity: 0; transition: all 0.12s; }
-.log-entry:hover .log-delete-btn { opacity: 1; }
+.log-action-btn { font-family: var(--mono); font-size: var(--fs-md); color: var(--text3); background: none; border: 1px solid var(--border2); padding: 1px 6px; border-radius: 2px; cursor: pointer; opacity: 0; transition: all 0.12s; }
+.log-entry:hover .log-action-btn { opacity: 1; }
+.log-edit-btn { margin-left: auto; }
+.log-edit-btn:hover { border-color: var(--amber-dim); color: var(--amber); }
 .log-delete-btn:hover { border-color: var(--red); color: var(--red); }
 .log-notes { font-family: var(--sans); font-size: var(--fs-lg); color: var(--text2); line-height: 1.6; }
 .empty-state { padding: 48px 28px; text-align: center; color: var(--text3); font-family: var(--mono); font-size: var(--fs-md); letter-spacing: 0.06em; }

@@ -9,6 +9,7 @@ const AUTHENTICATED_CAPABILITIES = {
   submitOtherEntryTypes: true,
   setStatus: true,
   setLabels: true,
+  editLogEntry: true,
   deleteLogEntry: true,
 };
 
@@ -19,6 +20,7 @@ const GUEST_CAPABILITIES = {
   submitOtherEntryTypes: false,
   setStatus: false,
   setLabels: false,
+  editLogEntry: false,
   deleteLogEntry: false,
 };
 

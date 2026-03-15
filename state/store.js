@@ -5,6 +5,7 @@ const state = {
   pendingLabels: {},   // map of label key → 'add' | 'remove'
   stagedFiles: [],     // array of { name, type, url }
   drafts: {},          // map of instrument id → draft object
+  editingEntryId: null, // log entry ID being edited, or null
 };
 
 export function get(key) {

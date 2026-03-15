@@ -93,7 +93,7 @@ async function selectInstrument(id) {
   renderLabelsStrip(inst);
   renderDisplayReadyBadge(raw);
   renderScoreStrip(inst, c, raw);
-  renderLog(inst, c, c.deleteLogEntry ? onDeleteLogEntry : null);
+  renderLog(inst, c, c.editLogEntry ? onEditLogEntry : null, c.deleteLogEntry ? onDeleteLogEntry : null);
 
   // Form setup
   form.configureStatusSelect(raw);
@@ -147,10 +147,11 @@ async function selectInstrument(id) {
   }
 }
 
-async function addEntry() {
+async function submitEntry() {
   const id = store.get('selectedId');
   if (!id) return;
   const raw = await api.getInstrumentRaw(id);
+  const editingId = store.get('editingEntryId');
 
   const values = form.readFormValues();
   if (!values.notes.trim()) {
@@ -158,51 +159,106 @@ async function addEntry() {
     return;
   }
 
-  // Compute effective changes — send everything, backend enforces permissions
-  const terminal = raw.status === 'retired' || raw.status === 'disposed';
-  const effectiveStatus = (!terminal && values.status && values.status !== raw.status)
-    ? values.status : null;
-  const currentScore = getScore(raw);
-  const effectiveScore = (values.score && parseInt(values.score) !== currentScore)
-    ? parseInt(values.score) : null;
+  if (editingId) {
+    // Edit mode — update existing entry
+    // Collect label deltas from pending
+    const pendingLabels = store.get('pendingLabels');
+    const labelsAdded = Object.entries(pendingLabels)
+      .filter(([, v]) => v === 'add').map(([k]) => k);
+    const labelsRemoved = Object.entries(pendingLabels)
+      .filter(([, v]) => v === 'remove').map(([k]) => k);
 
-  // Collect label changes from pending
-  const pendingLabels = store.get('pendingLabels');
-  const labelsAdded = [];
-  const labelsRemoved = [];
-  {
+    try {
+      await api.editLogEntry(id, editingId, {
+        notes: values.notes.trim(),
+        status: values.status || null,
+        score: values.score ? parseInt(values.score) : null,
+        location: values.location || null,
+        labels_added: labelsAdded,
+        labels_removed: labelsRemoved,
+      });
+    } catch (e) {
+      alert(e.message);
+      return;
+    }
+    store.set('editingEntryId', null);
+    showToast('Log entry updated');
+  } else {
+    // Create mode — add new entry
+    const terminal = raw.status === 'retired' || raw.status === 'disposed';
+    const effectiveStatus = (!terminal && values.status && values.status !== raw.status)
+      ? values.status : null;
+    const currentScore = getScore(raw);
+    const effectiveScore = (values.score && parseInt(values.score) !== currentScore)
+      ? parseInt(values.score) : null;
+
+    const pendingLabels = store.get('pendingLabels');
+    const labelsAdded = [];
+    const labelsRemoved = [];
     Object.entries(pendingLabels).forEach(([key, action]) => {
       if (action === 'add' && !raw.labels.includes(key)) labelsAdded.push(key);
       if (action === 'remove') labelsRemoved.push(key);
     });
-  }
 
-  try {
-    await api.addLogEntry(id, {
-      type: values.type,
-      date: values.date,
-      notes: values.notes.trim(),
-      status: effectiveStatus,
-      score: effectiveScore,
-      location: values.location || null,
-      labelsAdded,
-      labelsRemoved,
-      attachments: store.get('stagedFiles').map(f => ({ name: f.name, type: f.type, url: f.url })),
-    });
-  } catch (e) {
-    alert(e.message);
-    return;
+    try {
+      await api.addLogEntry(id, {
+        type: values.type,
+        date: values.date,
+        notes: values.notes.trim(),
+        status: effectiveStatus,
+        score: effectiveScore,
+        location: values.location || null,
+        labelsAdded,
+        labelsRemoved,
+        attachments: store.get('stagedFiles').map(f => ({ name: f.name, type: f.type, url: f.url })),
+      });
+    } catch (e) {
+      alert(e.message);
+      return;
+    }
+    showToast('Log entry saved');
   }
 
   // Clear form state and reset DOM so stale values don't get re-saved as a draft
   store.set('stagedFiles', []);
   store.set('pendingLabels', {});
+  store.set('editingEntryId', null);
   store.clearDraft(id);
   document.getElementById('entryType').value = '';
   document.getElementById('entryNotes').value = '';
 
   await selectInstrument(id);
-  showToast('Log entry saved');
+}
+
+async function onEditLogEntry(logEntryId) {
+  const id = store.get('selectedId');
+  if (!id) return;
+  const raw = await api.getInstrumentRaw(id);
+  const entry = raw.log.find(e => e.id === logEntryId);
+  if (!entry) return;
+
+  // Pre-fill the form with the entry's values
+  store.set('editingEntryId', logEntryId);
+  form.setFormValues({
+    type: entry.type,
+    status: entry.status || raw.status,
+    score: entry.score ? String(entry.score) : String(getScore(raw) || 5),
+    date: entry.date,
+    location: entry.location || '',
+    notes: entry.notes,
+  });
+  document.getElementById('entryType').disabled = true;
+  document.getElementById('submitBtn').disabled = false;
+
+  // Pre-fill pending labels from the entry's deltas
+  const pending = {};
+  for (const key of (entry.labels_added || [])) pending[key] = 'add';
+  for (const key of (entry.labels_removed || [])) pending[key] = 'remove';
+  store.set('pendingLabels', pending);
+  form.renderLabelsEditRow(pending, onLabelToggle);
+
+  form.setEditMode(true);
+  form.openForm();
 }
 
 async function onDeleteLogEntry(logEntryId) {
@@ -291,9 +347,13 @@ async function onLabelToggle(key, action) {
   }
   store.set('pendingLabels', pendingLabels);
 
-  const raw = await api.getInstrumentRaw(store.get('selectedId'));
-  form.renderLabelsFormRow(raw, pendingLabels, onLabelToggle);
-  updateDisplayReadyPreview();
+  if (store.get('editingEntryId')) {
+    form.renderLabelsEditRow(pendingLabels, onLabelToggle);
+  } else {
+    const raw = await api.getInstrumentRaw(store.get('selectedId'));
+    form.renderLabelsFormRow(raw, pendingLabels, onLabelToggle);
+    updateDisplayReadyPreview();
+  }
 }
 
 function onFilesSelected() {
@@ -344,7 +404,7 @@ async function startApp(session) {
     document.getElementById('entryNewStatus').addEventListener('change', onStatusChange);
     document.getElementById('entryScore').addEventListener('change', updateDisplayReadyPreview);
     document.getElementById('entryFiles').addEventListener('change', onFilesSelected);
-    document.getElementById('submitBtn').addEventListener('click', addEntry);
+    document.getElementById('submitBtn').addEventListener('click', submitEntry);
     document.querySelector('.attach-btn').addEventListener('click', () => document.getElementById('entryFiles').click());
     document.getElementById('logoutBtn').addEventListener('click', handleLogout);
   }
@@ -361,6 +421,7 @@ function resetAppState() {
   store.set('activeFilter', 'all');
   store.set('pendingLabels', {});
   store.set('stagedFiles', []);
+  store.set('editingEntryId', null);
 
   // Show empty state, hide main content
   document.getElementById('mainEmptyState').classList.remove('hidden');

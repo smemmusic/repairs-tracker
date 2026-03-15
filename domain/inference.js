@@ -21,19 +21,18 @@ export function inferStatusSuggestion(entryType, currentStatus) {
 export function inferLabelSuggestions(entryType, effectiveStatus, currentLabels) {
   const suggestions = {};
 
+  // Global rule: broken status always implies needs_repair
+  if (effectiveStatus === 'broken' && !currentLabels.includes('needs_repair')) {
+    suggestions['needs_repair'] = 'add';
+  }
+
   if (entryType === 'fault_report') {
-    if (effectiveStatus === 'broken' && !currentLabels.includes('needs_repair')) {
-      suggestions['needs_repair'] = 'add';
-    }
     if (!currentLabels.includes('needs_investigation')) {
       suggestions['needs_investigation'] = 'add';
     }
   }
 
   if (entryType === 'assessment') {
-    if (effectiveStatus === 'broken' && !currentLabels.includes('needs_repair')) {
-      suggestions['needs_repair'] = 'add';
-    }
     if (effectiveStatus === 'working' && currentLabels.includes('needs_repair')) {
       suggestions['needs_repair'] = 'remove';
     }

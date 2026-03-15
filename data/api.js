@@ -200,6 +200,54 @@ export async function addLogEntry(instrumentId, entry) {
 }
 
 /**
+ * Recompute instrument status and labels from its log entries.
+ */
+function recomputeState(inst) {
+  let status = 'unknown';
+  for (const entry of inst.log) {
+    if (entry.status) status = entry.status;
+  }
+  inst.status = status;
+
+  const labels = new Set();
+  for (const entry of inst.log) {
+    for (const key of (entry.labels_added || [])) labels.add(key);
+    for (const key of (entry.labels_removed || [])) labels.delete(key);
+  }
+  inst.labels = [...labels];
+}
+
+/**
+ * Edit a log entry's notes, then recompute instrument state.
+ * Returns the updated instrument.
+ */
+export async function editLogEntry(instrumentId, logEntryId, updates) {
+  const session = await getSession();
+  const caps = session?.capabilities || {};
+
+  if (!caps.editLogEntry) {
+    throw new Error('Permission denied: login required to edit log entries');
+  }
+
+  const inst = instruments.find(i => i.id === instrumentId);
+  if (!inst) throw new Error(`Instrument not found: ${instrumentId}`);
+
+  const entry = inst.log.find(e => e.id === logEntryId);
+  if (!entry) throw new Error(`Log entry not found: ${logEntryId}`);
+
+  if (updates.notes !== undefined) entry.notes = updates.notes;
+  if (updates.status !== undefined) entry.status = updates.status || null;
+  if (updates.score !== undefined) entry.score = updates.score;
+  if (updates.location !== undefined) entry.location = updates.location || null;
+  if (updates.labels_added !== undefined) entry.labels_added = updates.labels_added;
+  if (updates.labels_removed !== undefined) entry.labels_removed = updates.labels_removed;
+
+  recomputeState(inst);
+  persist();
+  return inst;
+}
+
+/**
  * Delete a log entry and recompute instrument state from remaining entries.
  * Returns the updated instrument.
  */
@@ -218,22 +266,7 @@ export async function deleteLogEntry(instrumentId, logEntryId) {
   if (idx === -1) throw new Error(`Log entry not found: ${logEntryId}`);
 
   inst.log.splice(idx, 1);
-
-  // Recompute status from log (replay)
-  let status = 'unknown';
-  for (const entry of inst.log) {
-    if (entry.status) status = entry.status;
-  }
-  inst.status = status;
-
-  // Recompute labels from log (replay)
-  const labels = new Set();
-  for (const entry of inst.log) {
-    for (const key of (entry.labels_added || [])) labels.add(key);
-    for (const key of (entry.labels_removed || [])) labels.delete(key);
-  }
-  inst.labels = [...labels];
-
+  recomputeState(inst);
   persist();
   return inst;
 }
