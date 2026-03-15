@@ -140,6 +140,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 
 /* Labels strip */
 .label-tag { font-family: var(--mono); font-size: var(--fs-md); padding: 3px 8px 3px 10px; border: 1px solid; border-radius: var(--radius); letter-spacing: 0.06em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 7px; }
+.label-tag.label-tag-sm { font-size: var(--fs-xs); padding: 1px 5px; }
 .label-dismiss { cursor: pointer; opacity: 0.45; font-size: var(--fs-base); transition: opacity 0.12s; border: none; background: none; color: inherit; padding: 0; line-height: 1; }
 .label-dismiss:hover { opacity: 1; }
 .labels-empty { font-family: var(--mono); font-size: var(--fs-md); color: var(--text3); }
