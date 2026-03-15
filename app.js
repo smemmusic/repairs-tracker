@@ -101,7 +101,6 @@ async function selectInstrument(id) {
   // Form setup — clear any edit mode
   store.set('editingEntryId', null);
   form.setEditMode(false);
-  form.configureStatusSelect(raw);
   form.clearStatusHint();
   document.getElementById('entryType').disabled = false;
 

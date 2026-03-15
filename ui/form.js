@@ -141,12 +141,6 @@ export function resetForm(instrument) {
 }
 
 /**
- * Configure the status select (no-op, kept for call-site compatibility).
- */
-export function configureStatusSelect(_instrument) {
-}
-
-/**
  * Show status hint text (inferred or manual override).
  */
 export function showStatusHint(text, type) {

@@ -243,7 +243,7 @@ Status describes the physical/functional condition of the instrument. It is set 
 
 `unknown` is the implicit initial state. It is never set explicitly on a log entry — it is the absence of any status entry. It cannot be set via the UI.
 
-`retired` and `disposed` are terminal states. Log entries can still be made against these instruments, but the status field is locked — no log entry may change the status of a retired or disposed instrument.
+Any status can transition to any other status. There are no terminal states — a retired or disposed instrument can be returned to service if needed.
 
 ### Inferred status transition
 
@@ -284,6 +284,7 @@ flowchart TD
 
     Repair -->|"resulting status = working<br>+ needs_repair present"| RemRepair2["-needs_repair"]
     Repair -->|"resulting status = working<br>+ needs_investigation present"| RemInv["-needs_investigation"]
+    Repair -->|"resulting status = working<br>+ needs_parts present"| RemParts["-needs_parts"]
 
     Cleaning -->|"needs_cleaning present"| RemCleaning["-needs_cleaning"]
 ```
@@ -304,6 +305,7 @@ flowchart TD
 | `assessment` | `working` | `needs_repair` present | suggest `-needs_repair` |
 | `repair` | `working` | `needs_repair` present | suggest `-needs_repair` |
 | `repair` | `working` | `needs_investigation` present | suggest `-needs_investigation` |
+| `repair` | `working` | `needs_parts` present | suggest `-needs_parts` |
 | `cleaning` | any | `needs_cleaning` present | suggest `-needs_cleaning` |
 
 ### Label dismissal
