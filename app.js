@@ -80,6 +80,10 @@ async function selectInstrument(id) {
   const raw = await api.getInstrumentRaw(id);
   if (!inst) return;
 
+  // Show main content, hide empty state
+  document.getElementById('mainEmptyState').classList.add('hidden');
+  document.getElementById('mainContent').classList.add('visible');
+
   const c = caps();
 
   // Render detail panels
@@ -363,18 +367,9 @@ function resetAppState() {
   store.set('pendingLabels', {});
   store.set('stagedFiles', []);
 
-  // Reset detail panel to empty state
-  document.getElementById('instrTitle').textContent = '—';
-  document.getElementById('instrId').textContent = 'Select an instrument';
-  document.getElementById('statusBadge').textContent = 'unknown';
-  document.getElementById('statusBadge').className = 'status-badge tag-unknown';
-  document.getElementById('labelsStrip').innerHTML = '<span class="labels-empty">No active labels</span>';
-  document.getElementById('scoreBar').innerHTML = '';
-  document.getElementById('scoreValue').textContent = '—';
-  document.getElementById('lastEntry').textContent = '—';
-  document.getElementById('entryCount').textContent = '—';
-  document.getElementById('displayReadyBadge').innerHTML = '';
-  document.getElementById('logEntries').innerHTML = '<div class="empty-state">← Select an instrument to view its log</div>';
+  // Show empty state, hide main content
+  document.getElementById('mainEmptyState').classList.remove('hidden');
+  document.getElementById('mainContent').classList.remove('visible');
   document.getElementById('addLogBtn').classList.add('hidden');
 
   // Reset form to clean state
