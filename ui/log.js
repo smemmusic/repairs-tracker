@@ -21,16 +21,7 @@ export function renderLog(instrument, capabilities, onDelete) {
     return;
   }
 
-  [...instrument.log].reverse().forEach((entry, i, arr) => {
-    const prev = arr[i + 1];
-    const prevScore = prev ? prev.score : null;
-    let scoreDelta = '';
-    if (entry.score !== null && prevScore !== null) {
-      const diff = entry.score - prevScore;
-      if (diff > 0) scoreDelta = `<span class="condition-change up">▲ ${diff}</span>`;
-      else if (diff < 0) scoreDelta = `<span class="condition-change down">▼ ${Math.abs(diff)}</span>`;
-    }
-
+  [...instrument.log].reverse().forEach((entry) => {
     const scoreTag = (capabilities.viewScores && entry.score !== null)
       ? `<span class="log-score-tag">${entry.score}/10</span>` : '';
 
@@ -44,7 +35,7 @@ export function renderLog(instrument, capabilities, onDelete) {
       }),
       ...(entry.labels_removed || []).map(key => {
         const d = getLabelDef(key);
-        return d ? `<span class="log-label-tag removed">− ${d.label}</span>` : '';
+        return d ? `<span class="log-label-tag removed">${d.label}</span>` : '';
       }),
     ].join('');
 
@@ -76,7 +67,7 @@ export function renderLog(instrument, capabilities, onDelete) {
       <div>
         <div class="log-top">
           <span class="entry-type-tag ${entry.type}">${entry.type.replace('_', ' ')}</span>
-          ${statusTag}${labelTags}${scoreTag}${scoreDelta}
+          ${statusTag}${labelTags}${scoreTag}
           ${deleteBtn}
         </div>
         <div class="log-notes">${entry.notes}</div>
