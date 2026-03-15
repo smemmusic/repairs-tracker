@@ -196,11 +196,12 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 .log-location-tag { text-transform: uppercase; letter-spacing: 0.06em; }
 
 /* Log action buttons */
-.log-action-btn { padding: 1px 6px; opacity: 0; transition: var(--transition); }
+.log-action-btn { padding: 1px 6px; opacity: 0; transition: var(--transition); background: var(--bg); font-family: var(--mono); font-size: var(--fs-md); border-radius: var(--radius); cursor: pointer; }
 .log-entry:hover .log-action-btn { opacity: 1; }
-.log-edit-btn { margin-left: auto; }
-.log-edit-btn:hover { border-color: var(--amber-dim); color: var(--amber); }
-.log-delete-btn:hover { border-color: var(--red); color: var(--red); }
+.log-edit-btn { margin-left: auto; color: var(--amber); border: 1px solid var(--amber-dim); }
+.log-edit-btn:hover { background: var(--amber-glow); border-color: var(--amber); }
+.log-delete-btn { color: var(--red); border: 1px solid var(--red); }
+.log-delete-btn:hover { background: rgba(158,74,74,0.08); }
 
 /* Add log bar + button */
 .add-log-bar { display: flex; justify-content: center; padding: 10px; background: var(--bg2); border-top: 1px solid var(--border); }
