@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Synth Repair Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f0f0f; --bg2: #161616; --bg3: #1e1e1e; --bg4: #262626;
+    --border: #2a2a2a; --border2: #333;
+    --text: #e8e4dc; --text2: #9a9488; --text3: #5a5650;
+    --amber: #d4852a; --amber-dim: #8a5518; --amber-glow: rgba(212,133,42,0.08);
+    --green: #4a9e6e; --green-dim: #1e4a32;
+    --red: #9e4a4a; --blue: #4a7a9e;
+    --pink: #c06090; --pink-dim: #7a3a58;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 13px; min-height: 100vh; line-height: 1.5; }
+  .app { display: flex; height: 100vh; overflow: hidden; }
+
+  /* Sidebar */
+  .sidebar { width: 280px; min-width: 280px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+  .sidebar-header { padding: 20px 16px 14px; border-bottom: 1px solid var(--border); }
+  .logo { font-family: var(--mono); font-size: 11px; color: var(--amber); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 2px; }
+  .logo-sub { font-family: var(--mono); font-size: 10px; color: var(--text3); letter-spacing: 0.08em; }
+  .sidebar-search { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .search-input { width: 100%; background: var(--bg3); border: 1px solid var(--border2); color: var(--text); font-family: var(--mono); font-size: 11px; padding: 6px 10px; outline: none; border-radius: 2px; transition: border-color 0.15s; }
+  .search-input::placeholder { color: var(--text3); }
+  .search-input:focus { border-color: var(--amber-dim); }
+  .sidebar-filters { padding: 8px 12px; border-bottom: 1px solid var(--border); display: flex; gap: 4px; flex-wrap: wrap; }
+  .filter-chip { font-family: var(--mono); font-size: 9px; padding: 3px 7px; border: 1px solid var(--border2); color: var(--text3); background: none; cursor: pointer; border-radius: 2px; letter-spacing: 0.06em; text-transform: uppercase; transition: all 0.12s; }
+  .filter-chip:hover { border-color: var(--amber-dim); color: var(--amber); }
+  .filter-chip.active { border-color: var(--amber); color: var(--amber); background: var(--amber-glow); }
+  .instrument-list { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+  .instrument-item { padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
+  .instrument-item:hover { background: var(--bg3); }
+  .instrument-item.active { background: var(--bg3); border-left: 2px solid var(--amber); padding-left: 14px; }
+  .instrument-name { font-family: var(--mono); font-size: 12px; color: var(--text); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .instrument-serial { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-bottom: 4px; }
+  .instrument-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .status-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .status-label-small { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+  .entry-count { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-left: auto; }
+
+  /* Status colors */
+  .s-unknown  { background: var(--text3); }
+  .s-broken   { background: var(--red); }
+  .s-working  { background: var(--green); }
+  .s-retired  { background: #555; }
+  .s-disposed { background: #333; }
+  .tag-unknown  { color: var(--text3); border-color: #444; }
+  .tag-broken   { color: var(--red);   border-color: var(--red); }
+  .tag-working  { color: var(--green); border-color: var(--green-dim); }
+  .tag-retired  { color: var(--text3); border-color: #444; }
+  .tag-disposed { color: #555;         border-color: #3a3a3a; }
+
+  /* Label colors */
+  .label-needs_repair        { color: var(--amber); border-color: var(--amber-dim); background: var(--amber-glow); }
+  .label-needs_investigation { color: var(--pink);  border-color: var(--pink-dim);  background: rgba(192,96,144,0.08); }
+  .label-needs_cleaning      { color: var(--blue);  border-color: var(--blue);      background: rgba(74,122,158,0.08); }
+
+  /* Main */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
+  .main-header { padding: 20px 28px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 12px; }
+  .main-title-block { flex: 1; }
+  .instrument-title { font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .instrument-id { font-family: var(--mono); font-size: 10px; color: var(--text3); letter-spacing: 0.08em; }
+  .status-badge { font-family: var(--mono); font-size: 10px; padding: 4px 10px; border: 1px solid; border-radius: 2px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: opacity 0.15s; white-space: nowrap; }
+  .status-badge:hover { opacity: 0.75; }
+  .airtable-link { font-family: var(--mono); font-size: 10px; color: var(--text3); text-decoration: none; border: 1px solid var(--border2); padding: 4px 10px; border-radius: 2px; transition: all 0.12s; white-space: nowrap; }
+  .airtable-link:hover { border-color: var(--amber-dim); color: var(--amber); }
+
+  /* Labels strip */
+  .labels-strip { padding: 8px 28px; border-bottom: 1px solid var(--border); background: var(--bg2); display: flex; align-items: center; gap: 8px; min-height: 40px; flex-wrap: wrap; }
+  .label-tag { font-family: var(--mono); font-size: 10px; padding: 3px 8px 3px 10px; border: 1px solid; border-radius: 2px; letter-spacing: 0.06em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 7px; }
+  .label-dismiss { cursor: pointer; opacity: 0.45; font-size: 12px; transition: opacity 0.12s; border: none; background: none; color: inherit; padding: 0; line-height: 1; }
+  .label-dismiss:hover { opacity: 1; }
+  .labels-empty { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+  .display-ready-badge { font-family: var(--mono); font-size: 10px; color: var(--green); border: 1px solid var(--green-dim); padding: 3px 10px; border-radius: 2px; letter-spacing: 0.06em; background: rgba(74,158,110,0.08); }
+
+  /* Score strip */
+  .score-strip { padding: 10px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 24px; background: var(--bg2); }
+  .score-item { display: flex; align-items: center; gap: 8px; }
+  .score-lbl { font-family: var(--mono); font-size: 10px; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; }
+  .score-val { font-family: var(--mono); font-size: 13px; color: var(--text); }
+  .score-val.amber { color: var(--amber); }
+  .score-bar { display: flex; gap: 2px; }
+  .score-pip { width: 14px; height: 5px; border-radius: 1px; background: var(--bg4); }
+  .score-pip.filled { background: var(--amber); }
+  .score-pip.filled.low { background: var(--red); }
+  .score-pip.filled.high { background: var(--green); }
+
+  /* Log */
+  .log-area { flex: 1; overflow-y: auto; padding: 0 28px; scrollbar-width: thin; scrollbar-color: var(--border2) transparent; position: relative; }
+  .log-entry { padding: 16px 0; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 100px 1fr; gap: 16px; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+  .log-date { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+  .log-author { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-top: 4px; }
+  .log-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+  .entry-type-tag { font-family: var(--mono); font-size: 9px; padding: 2px 6px; border: 1px solid var(--border2); color: var(--text3); border-radius: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .entry-type-tag.fault_report { color: var(--pink);  border-color: var(--pink-dim); }
+  .entry-type-tag.repair       { color: var(--amber); border-color: var(--amber-dim); }
+  .entry-type-tag.assessment   { color: var(--blue);  border-color: var(--blue); }
+  .entry-type-tag.cleaning     { color: var(--green); border-color: var(--green-dim); }
+  .status-change-tag { font-family: var(--mono); font-size: 9px; padding: 2px 6px; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.06em; border: 1px solid; }
+  .log-label-tag { font-family: var(--mono); font-size: 9px; padding: 2px 6px; border: 1px solid; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .condition-change { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-left: auto; }
+  .condition-change.up { color: var(--green); }
+  .condition-change.down { color: var(--red); }
+  .log-notes { font-family: var(--sans); font-size: 13px; color: var(--text2); line-height: 1.6; }
+  .empty-state { padding: 48px 28px; text-align: center; color: var(--text3); font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; }
+
+  /* Add log button */
+  .add-log-btn { font-family: var(--mono); font-size: 10px; padding: 5px 14px; border: 1px solid var(--amber-dim); color: var(--amber); background: var(--amber-glow); cursor: pointer; border-radius: 2px; letter-spacing: 0.06em; text-transform: uppercase; transition: all 0.12s; white-space: nowrap; margin-left: auto; }
+  .add-log-btn:hover { background: rgba(212,133,42,0.15); border-color: var(--amber); }
+
+  /* Form */
+  .add-entry-panel { display: none; position: absolute; inset: 0; background: var(--bg); z-index: 10; overflow-y: auto; padding: 28px; scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+  .add-entry-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .add-entry-title { font-family: var(--mono); font-size: 11px; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; }
+  .add-entry-close { font-family: var(--mono); font-size: 10px; padding: 5px 12px; border: 1px solid var(--border2); color: var(--text3); background: none; cursor: pointer; border-radius: 2px; letter-spacing: 0.06em; transition: all 0.12s; }
+  .add-entry-close:hover { border-color: var(--text2); color: var(--text); }
+  .add-entry-form { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; align-items: start; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-label { font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; display: flex; gap: 6px; align-items: center; }
+  .form-input, .form-select, .form-textarea { background: var(--bg3); border: 1px solid var(--border2); color: var(--text); font-family: var(--mono); font-size: 11px; padding: 7px 10px; outline: none; border-radius: 2px; transition: border-color 0.15s; width: 100%; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--amber-dim); }
+  .form-select { cursor: pointer; appearance: none; }
+  .form-textarea { resize: vertical; min-height: 80px; height: 120px; font-family: var(--sans); font-size: 12px; line-height: 1.5; }
+  .form-textarea::placeholder { color: var(--text3); }
+  .submit-btn { background: var(--amber); color: var(--bg); border: none; font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 8px 16px; cursor: pointer; border-radius: 2px; letter-spacing: 0.06em; text-transform: uppercase; transition: opacity 0.15s; white-space: nowrap; height: 34px; align-self: end; }
+  .submit-btn:hover { opacity: 0.85; }
+  .submit-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal { background: var(--bg2); border: 1px solid var(--border2); border-radius: 3px; padding: 20px; width: 340px; transform: translateY(8px); transition: transform 0.15s; }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-title { font-family: var(--mono); font-size: 11px; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px; }
+  .status-option { display: flex; align-items: center; gap: 10px; padding: 9px 12px; cursor: pointer; border-radius: 2px; transition: background 0.1s; margin-bottom: 3px; }
+  .status-option:hover { background: var(--bg3); }
+  .status-option-label { font-family: var(--mono); font-size: 12px; color: var(--text); }
+  .modal-close { margin-top: 14px; font-family: var(--mono); font-size: 10px; color: var(--text3); background: none; border: none; cursor: pointer; letter-spacing: 0.06em; padding: 0; }
+  .modal-close:hover { color: var(--text); }
+
+  /* Label toggle buttons in form */
+  .label-toggle {
+    font-family: var(--mono); font-size: 10px; padding: 4px 10px;
+    border: 1px solid; border-radius: 2px; cursor: pointer;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    transition: all 0.12s; background: none; opacity: 0.35;
+  }
+  .label-toggle.active { opacity: 1; }
+  .label-toggle.add    { }
+  .label-toggle.remove { text-decoration: line-through; }
+  .label-toggle-hint { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+  .dr-tooltip {
+    display: none; position: absolute; bottom: calc(100% + 6px); left: 0;
+    background: var(--bg3); border: 1px solid var(--border2); border-radius: 4px;
+    padding: 8px 10px; white-space: nowrap; z-index: 10;
+    flex-direction: column; gap: 4px;
+    font-family: var(--mono); font-size: 10px;
+  }
+  .dr-preview-wrap:hover .dr-tooltip { display: flex; }
+  /* Attachments */
+  .attach-input { display: none; }
+  .attach-btn { font-family: var(--mono); font-size: 10px; padding: 6px 12px; border: 1px dashed var(--border2); color: var(--text3); background: none; cursor: pointer; border-radius: 2px; letter-spacing: 0.06em; transition: all 0.12s; }
+  .attach-btn:hover { border-color: var(--amber-dim); color: var(--amber); }
+  .attach-preview { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  .attach-thumb { position: relative; width: 56px; height: 56px; border-radius: 2px; border: 1px solid var(--border2); overflow: hidden; background: var(--bg3); }
+  .attach-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .attach-thumb .attach-name { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 8px; color: var(--text3); text-align: center; padding: 2px; word-break: break-all; }
+  .attach-thumb .attach-remove { position: absolute; top: 1px; right: 1px; width: 14px; height: 14px; background: rgba(0,0,0,0.7); color: var(--text3); border: none; font-size: 10px; line-height: 14px; text-align: center; cursor: pointer; border-radius: 1px; padding: 0; display: none; }
+  .attach-thumb:hover .attach-remove { display: block; }
+  .log-attachments { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .log-attach-thumb { width: 72px; height: 72px; border-radius: 2px; border: 1px solid var(--border2); overflow: hidden; background: var(--bg3); cursor: pointer; transition: border-color 0.12s; }
+  .log-attach-thumb:hover { border-color: var(--amber-dim); }
+  .log-attach-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .log-attach-thumb .attach-name { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; font-family: var(--mono); font-size: 8px; color: var(--text3); text-align: center; padding: 4px; word-break: break-all; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">Repair Tracker</div>
+      <div class="logo-sub">Synthesiser Museum — v0.2</div>
+    </div>
+    <div class="sidebar-search">
+      <input class="search-input" type="text" placeholder="Search instruments..." id="searchInput" oninput="renderInstrumentList()">
+    </div>
+    <div class="sidebar-filters" id="sidebarFilters"></div>
+    <div class="instrument-list" id="instrumentList"></div>
+  </div>
+
+  <div class="main">
+    <div class="main-header">
+      <div class="main-title-block">
+        <div class="instrument-title" id="instrTitle">—</div>
+        <div class="instrument-id" id="instrId">Select an instrument</div>
+      </div>
+      <a href="#" class="airtable-link" onclick="return false;">↗ Airtable</a>
+      <div id="displayReadyBadge"></div>
+      <div class="status-badge tag-unknown" id="statusBadge" onclick="openStatusModal()">unknown</div>
+    </div>
+
+    <div class="labels-strip" id="labelsStrip">
+      <span class="labels-empty">No active labels</span>
+    </div>
+
+    <div class="score-strip">
+      <div class="score-item">
+        <span class="score-lbl">Condition</span>
+        <div class="score-bar" id="scoreBar"></div>
+        <span class="score-val amber" id="scoreValue">—</span>
+      </div>
+      <div class="score-item">
+        <span class="score-lbl">Last entry</span>
+        <span class="score-val" id="lastEntry">—</span>
+      </div>
+      <div class="score-item">
+        <span class="score-lbl">Log entries</span>
+        <span class="score-val" id="entryCount">—</span>
+      </div>
+      <button class="add-log-btn" id="addLogBtn" onclick="toggleEntryForm()" style="display:none;">+ New entry</button>
+    </div>
+
+    <div class="log-area" id="logArea">
+      <div id="logEntries">
+        <div class="empty-state">← Select an instrument to view its log</div>
+      </div>
+
+      <div class="add-entry-panel" id="addEntryPanel">
+        <div class="add-entry-header">
+          <div class="add-entry-title">New log entry</div>
+        </div>
+        <div class="add-entry-form">
+        <div class="form-group">
+          <label class="form-label">Type</label>
+          <select class="form-select" id="entryType" onchange="onTypeChange()">
+            <option value="">— select type —</option>
+            <option value="fault_report">Fault report</option>
+            <option value="assessment">Assessment</option>
+            <option value="repair">Repair</option>
+            <option value="cleaning">Cleaning</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status
+            <span id="statusHint" style="font-size:9px;opacity:0;transition:opacity 0.15s;"></span>
+          </label>
+          <select class="form-select" id="entryNewStatus" onchange="onStatusChange()">
+            <option value="unknown">Unknown</option>
+            <option value="broken">Broken</option>
+            <option value="working">Working</option>
+            <option value="retired">Retired</option>
+            <option value="disposed">Disposed</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Condition score</label>
+          <select class="form-select" id="entryScore" onchange="renderDisplayReadyPreview()">
+            <option value="1">1 — non-functional</option>
+            <option value="2">2</option><option value="3">3</option><option value="4">4</option>
+            <option value="5">5 — partial</option>
+            <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option>
+            <option value="10">10 — excellent</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input class="form-input" type="date" id="entryDate">
+        </div>
+        <!-- Labels row -->
+        <div class="form-group full" id="labelsFormGroup">
+          <label class="form-label">Labels</label>
+          <div id="labelsFormRow" style="display:flex;gap:6px;flex-wrap:wrap;min-height:28px;align-items:center;"></div>
+        </div>
+        <!-- Display ready preview -->
+        <div class="form-group full">
+          <label class="form-label">Display ready after this entry</label>
+          <div id="displayReadyPreview" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;min-height:24px;"></div>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Attachments</label>
+          <div>
+            <input type="file" class="attach-input" id="entryFiles" multiple accept="image/*,.pdf,.doc,.docx" onchange="onFilesSelected()">
+            <button type="button" class="attach-btn" onclick="document.getElementById('entryFiles').click()">+ Add files</button>
+            <div class="attach-preview" id="attachPreview"></div>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Notes</label>
+          <textarea class="form-textarea" id="entryNotes" placeholder="Describe the work done, findings, or next steps…"></textarea>
+        </div>
+        <div class="form-group full" style="display:flex;justify-content:flex-end;">
+          <button class="submit-btn" id="submitBtn" onclick="addEntry()" disabled>Log entry</button>
+        </div>
+      </div>
+    </div><!-- /add-entry-panel -->
+
+    </div><!-- /log-area -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<div class="modal-overlay" id="statusModal" onclick="closeStatusModal(event)">
+  <div class="modal">
+    <div class="modal-title">Change unit status</div>
+    <div id="statusOptions"></div>
+    <button class="modal-close" onclick="closeStatusModal()">Cancel</button>
+  </div>
+</div>
+
+<script>
+const DISPLAY_READY_THRESHOLD = 7;
+
+const STATUSES = [
+  { key: 'unknown',  label: 'Unknown',  desc: 'Condition not yet assessed' },
+  { key: 'broken',   label: 'Broken',   desc: 'Known functional issues' },
+  { key: 'working',  label: 'Working',  desc: 'Functioning correctly' },
+  { key: 'retired',  label: 'Retired',  desc: 'Kept in storage, not for display' },
+  { key: 'disposed', label: 'Disposed', desc: 'No longer in possession' },
+];
+
+const LABELS = [
+  { key: 'needs_repair',        label: 'Needs repair',        cls: 'label-needs_repair' },
+  { key: 'needs_investigation', label: 'Needs investigation', cls: 'label-needs_investigation' },
+  { key: 'needs_cleaning',      label: 'Needs cleaning',      cls: 'label-needs_cleaning' },
+];
+
+function getLabelDef(key) { return LABELS.find(l => l.key === key); }
+
+function inferSuggestedLabel(type) { return null; } // replaced by inferPendingLabels
+
+function inferPendingLabels(type, newStatus, currentLabels) {
+  const inst = instruments.find(i => i.id === selectedId);
+  const effectiveStatus = newStatus || (inst ? inst.status : 'unknown');
+  const pending = {};
+
+  if (type === 'fault_report') {
+    if (effectiveStatus === 'working') {
+      pending['__status'] = 'unknown';
+    }
+    if (effectiveStatus === 'broken' && !currentLabels.includes('needs_repair')) {
+      pending['needs_repair'] = 'add';
+    }
+    if (!currentLabels.includes('needs_investigation')) {
+      pending['needs_investigation'] = 'add';
+    }
+  }
+
+  if (type === 'assessment') {
+    if (effectiveStatus === 'broken' && !currentLabels.includes('needs_repair')) {
+      pending['needs_repair'] = 'add';
+    }
+    if (effectiveStatus === 'working' && currentLabels.includes('needs_repair')) {
+      pending['needs_repair'] = 'remove';
+    }
+  }
+
+  if (type === 'repair') {
+    if (effectiveStatus === 'working' && currentLabels.includes('needs_repair')) {
+      pending['needs_repair'] = 'remove';
+    }
+  }
+
+  if (type === 'cleaning') {
+    if (currentLabels.includes('needs_cleaning')) {
+      pending['needs_cleaning'] = 'remove';
+    }
+  }
+
+  return pending;
+}
+
+// Per-entry label changes: map of key → 'add' | 'remove' | null
+let pendingLabels = {};
+
+// Staged file attachments for the current entry
+let stagedFiles = [];
+
+// Per-instrument draft storage
+const drafts = {};
+
+function saveDraft() {
+  if (!selectedId) return;
+  const type = document.getElementById('entryType').value;
+  const notes = document.getElementById('entryNotes').value;
+  const status = document.getElementById('entryNewStatus').value;
+  const score = document.getElementById('entryScore').value;
+  const date = document.getElementById('entryDate').value;
+  const formOpen = document.getElementById('addEntryPanel').style.display === 'block';
+  // Only save if there's something worth saving
+  if (!type && !notes && !stagedFiles.length) {
+    delete drafts[selectedId];
+    return;
+  }
+  drafts[selectedId] = { type, notes, status, score, date, pendingLabels: { ...pendingLabels }, stagedFiles: [...stagedFiles], formOpen };
+}
+
+function restoreDraft(id) {
+  const draft = drafts[id];
+  if (draft) {
+    document.getElementById('entryType').value = draft.type;
+    document.getElementById('entryNotes').value = draft.notes;
+    document.getElementById('entryNewStatus').value = draft.status;
+    document.getElementById('entryScore').value = draft.score;
+    document.getElementById('entryDate').value = draft.date;
+    pendingLabels = { ...draft.pendingLabels };
+    stagedFiles = [...draft.stagedFiles];
+    renderAttachPreview();
+    renderLabelsFormRow();
+    renderDisplayReadyPreview();
+    document.getElementById('submitBtn').disabled = !draft.type;
+    if (draft.formOpen) openEntryForm();
+  } else {
+    document.getElementById('entryDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('entryNewStatus').value = instruments.find(i => i.id === id).status;
+    document.getElementById('entryScore').value = getScore(instruments.find(i => i.id === id)) || '5';
+    document.getElementById('entryType').value = '';
+    document.getElementById('entryNotes').value = '';
+    document.getElementById('submitBtn').disabled = true;
+    pendingLabels = {};
+    stagedFiles = [];
+    renderAttachPreview();
+    renderLabelsFormRow();
+    renderDisplayReadyPreview();
+  }
+}
+
+function clearDraft(id) {
+  delete drafts[id];
+}
+
+function onFilesSelected() {
+  const input = document.getElementById('entryFiles');
+  for (const file of input.files) {
+    const url = URL.createObjectURL(file);
+    stagedFiles.push({ name: file.name, type: file.type, url });
+  }
+  input.value = '';
+  renderAttachPreview();
+}
+
+function removeStagedFile(index) {
+  URL.revokeObjectURL(stagedFiles[index].url);
+  stagedFiles.splice(index, 1);
+  renderAttachPreview();
+}
+
+function renderAttachPreview() {
+  const container = document.getElementById('attachPreview');
+  container.innerHTML = '';
+  stagedFiles.forEach((f, i) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'attach-thumb';
+    if (f.type.startsWith('image/')) {
+      thumb.innerHTML = `<img src="${f.url}" alt="${f.name}"><button class="attach-remove" onclick="removeStagedFile(${i})">✕</button>`;
+    } else {
+      thumb.innerHTML = `<span class="attach-name">${f.name}</span><button class="attach-remove" onclick="removeStagedFile(${i})">✕</button>`;
+    }
+    container.appendChild(thumb);
+  });
+}
+
+function toggleEntryForm() {
+  const panel = document.getElementById('addEntryPanel');
+  const btn = document.getElementById('addLogBtn');
+  const isOpen = panel.style.display === 'block';
+  if (isOpen) {
+    closeEntryForm();
+  } else {
+    openEntryForm();
+  }
+}
+
+function openEntryForm() {
+  document.getElementById('addEntryPanel').style.display = 'block';
+  document.getElementById('addLogBtn').textContent = '← View log';
+}
+
+function closeEntryForm() {
+  document.getElementById('addEntryPanel').style.display = 'none';
+  document.getElementById('addLogBtn').textContent = '+ New entry';
+}
+
+function onTypeChange() {
+  reInferLabels();
+}
+
+function reInferLabels() {
+  const inst = instruments.find(i => i.id === selectedId);
+  if (!inst) return;
+  const type = document.getElementById('entryType').value;
+  const statusSelect = document.getElementById('entryNewStatus');
+  document.getElementById('submitBtn').disabled = !type;
+
+  if (!type) {
+    statusSelect.value = inst.status;
+    document.getElementById('statusHint').style.opacity = '0';
+    pendingLabels = {};
+    renderLabelsFormRow();
+    const container = document.getElementById('displayReadyPreview');
+    if (container) container.innerHTML = '';
+    return;
+  }
+
+  // Always reset to current status before inferring, so each type change is clean
+  statusSelect.value = inst.status;
+  document.getElementById('statusHint').style.opacity = '0';
+
+  const inferred = inferPendingLabels(type, inst.status, inst.labels);
+
+  // Apply suggested status if inference provides one
+  if (inferred['__status']) {
+    statusSelect.value = inferred['__status'];
+    const hint = document.getElementById('statusHint');
+    hint.textContent = '← inferred';
+    hint.style.color = 'var(--amber)';
+    hint.style.opacity = '1';
+  }
+
+  pendingLabels = Object.fromEntries(Object.entries(inferred).filter(([k]) => k !== '__status'));
+  renderLabelsFormRow();
+  renderDisplayReadyPreview();
+}
+
+function renderLabelsFormRow() {
+  const inst = instruments.find(i => i.id === selectedId);
+  if (!inst) return;
+  const row = document.getElementById('labelsFormRow');
+  row.innerHTML = '';
+
+  // All possible labels — show current state + pending changes
+  const allKeys = LABELS.map(l => l.key);
+  let anyShown = false;
+
+  allKeys.forEach(key => {
+    const def = getLabelDef(key);
+    const onInstrument = inst.labels.includes(key);
+    const pending = pendingLabels[key]; // 'add' | 'remove' | undefined
+
+    // Determine display state
+    let state, action;
+    if (onInstrument && pending === 'remove') {
+      state = 'remove'; action = 'remove';   // will be removed
+    } else if (onInstrument) {
+      state = 'remove'; action = 'remove';   // currently on, click to remove
+    } else if (pending === 'add') {
+      state = 'add'; action = 'add';         // suggested add, click to cancel
+    } else {
+      state = null; action = 'add';          // not present, click to add
+    }
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `label-toggle ${def.cls}`;
+
+    if (onInstrument && pending !== 'remove') {
+      btn.classList.add('active');
+      btn.textContent = '✕ ' + def.label;
+      btn.title = 'Click to remove this label';
+      btn.onclick = () => { pendingLabels[key] = 'remove'; renderLabelsFormRow(); renderDisplayReadyPreview(); };
+    } else if (pending === 'remove') {
+      btn.classList.add('active', 'remove');
+      btn.textContent = def.label;
+      btn.title = 'Click to keep this label';
+      btn.onclick = () => { delete pendingLabels[key]; renderLabelsFormRow(); renderDisplayReadyPreview(); };
+    } else if (pending === 'add') {
+      btn.classList.add('active', 'add');
+      btn.textContent = '+ ' + def.label;
+      btn.title = 'Suggested — click to cancel';
+      btn.onclick = () => { delete pendingLabels[key]; renderLabelsFormRow(); renderDisplayReadyPreview(); };
+    } else {
+      btn.textContent = '+ ' + def.label;
+      btn.title = 'Click to add this label';
+      btn.onclick = () => { pendingLabels[key] = 'add'; renderLabelsFormRow(); renderDisplayReadyPreview(); };
+    }
+
+    row.appendChild(btn);
+    anyShown = true;
+  });
+
+  if (!anyShown) {
+    row.innerHTML = '<span class="label-toggle-hint">No labels</span>';
+  }
+}
+
+function renderDisplayReadyPreview() {
+  const inst = instruments.find(i => i.id === selectedId);
+  const container = document.getElementById('displayReadyPreview');
+  if (!inst || !container) return;
+
+  const type = document.getElementById('entryType').value;
+  if (!type) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const projectedStatus = document.getElementById('entryNewStatus').value || inst.status;
+  const scoreVal = document.getElementById('entryScore').value;
+  const projectedScore = scoreVal ? parseInt(scoreVal) : getScore(inst);
+  const projectedLabels = [...inst.labels];
+  Object.entries(pendingLabels).forEach(([key, action]) => {
+    if (action === 'add' && !projectedLabels.includes(key)) projectedLabels.push(key);
+    if (action === 'remove') { const i = projectedLabels.indexOf(key); if (i > -1) projectedLabels.splice(i, 1); }
+  });
+
+  const checks = [
+    { label: 'Status: working',                    pass: projectedStatus === 'working' },
+    { label: 'No active labels',                    pass: projectedLabels.length === 0 },
+    { label: `Score ≥ ${DISPLAY_READY_THRESHOLD}`,  pass: projectedScore !== null && projectedScore >= DISPLAY_READY_THRESHOLD },
+  ];
+  const allPass = checks.every(c => c.pass);
+
+  const tooltipLines = checks.map(c => `${c.pass ? '✓' : '✗'} ${c.label}`).join('&#10;');
+
+  container.innerHTML = `
+    <span style="position:relative;display:inline-block;" class="dr-preview-wrap">
+      <span style="font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:2px;
+        border:1px solid ${allPass ? 'var(--green)' : 'var(--red)'};
+        color:${allPass ? 'var(--green)' : 'var(--red)'};
+        background:${allPass ? 'rgba(74,158,110,0.08)' : 'rgba(158,74,74,0.08)'};
+        font-weight:500;opacity:${allPass ? '1' : '0.7'};cursor:default;
+      ">${allPass ? '✓' : '✗'} Display ready</span>
+      <span class="dr-tooltip">${checks.map(c =>
+        `<span style="color:${c.pass ? 'var(--green)' : 'var(--red)'};">${c.pass ? '✓' : '✗'} ${c.label}</span>`
+      ).join('')}</span>
+    </span>
+  `;
+}
+
+function isDisplayReady(inst) {
+  const score = getScore(inst);
+  return inst.status === 'working' && inst.labels.length === 0 && score !== null && score >= DISPLAY_READY_THRESHOLD;
+}
+
+const instruments = [
+  {
+    id: 'i1', airtable_id: 'AT-0042', display_name: 'Moog Minimoog Model D', serial_number: '12847',
+    status: 'broken', labels: ['needs_repair'],
+    log: [
+      { id: 'l1', type: 'assessment', date: '2026-02-18', author: 'Petra K.', notes: 'Keyboard plays. All three oscillators audible but unstable above C4. Filter functioning. Keybed contacts dirty.', status: 'broken', score: 4, labels_added: ['needs_repair'], labels_removed: [] },
+      { id: 'l2', type: 'cleaning',   date: '2026-02-25', author: 'Luc R.',   notes: 'Full keybed contact clean using Deoxit. Keys now registering correctly. Pitch and mod wheels freed up.', status: null, score: null, labels_added: [], labels_removed: [] },
+      { id: 'l3', type: 'repair',     date: '2026-03-05', author: 'Jean-Marc B.', notes: 'Replaced C14 and C18 on VCO board. Oscillator 1 tracking correctly. Oscillator 2 still drifts — trimmer calibration needed.', status: null, score: 6, labels_added: [], labels_removed: [] },
+      { id: 'l4', type: 'repair',     date: '2026-03-12', author: 'Jean-Marc B.', notes: 'Recalibrated OSC 2 trimmer R47. All three oscillators tracking within ±2 cents. Filter self-oscillation confirmed.', status: null, score: 8, labels_added: [], labels_removed: [] },
+    ]
+  },
+  {
+    id: 'i2', airtable_id: 'AT-0017', display_name: 'Roland Juno-106', serial_number: '643291',
+    status: 'working', labels: [],
+    log: [
+      { id: 'l5', type: 'assessment', date: '2026-01-10', author: 'Petra K.', notes: 'Voices 3 and 5 dead — 80017A chip failure. Four voices functional. Chorus working.', status: 'broken', score: 5, labels_added: ['needs_repair'], labels_removed: [] },
+      { id: 'l6', type: 'repair',     date: '2026-02-01', author: 'Jean-Marc B.', notes: 'Replaced 80017A chips on voices 3 and 5. All six voices now producing audio.', status: null, score: 7, labels_added: [], labels_removed: [] },
+      { id: 'l7', type: 'assessment', date: '2026-02-14', author: 'Petra K.', notes: 'All six voices consistent. Chorus both modes functional. Approved for display.', status: 'working', score: 9, labels_added: [], labels_removed: ['needs_repair'] },
+    ]
+  },
+  {
+    id: 'i3', airtable_id: 'AT-0008', display_name: 'ARP 2600', serial_number: null,
+    status: 'broken', labels: ['needs_repair'],
+    log: [
+      { id: 'l8', type: 'assessment', date: '2025-11-20', author: 'Petra K.', notes: 'Significant corrosion on PSU board. VCO 1 non-functional. VCF intact. No serial number visible.', status: 'broken', score: 2, labels_added: ['needs_repair'], labels_removed: [] },
+    ]
+  },
+  {
+    id: 'i4', airtable_id: 'AT-0031', display_name: 'Oberheim OB-Xa', serial_number: 'OB2-1042',
+    status: 'broken', labels: ['needs_repair', 'needs_investigation'],
+    log: [
+      { id: 'l9',  type: 'assessment',   date: '2026-01-28', author: 'Jean-Marc B.', notes: 'Eight-voice unit. Voices 1, 2, 7 producing audio. Five others silent. Panel switches intermittent.', status: 'broken', score: 3, labels_added: ['needs_repair'], labels_removed: [] },
+      { id: 'l10', type: 'fault_report', date: '2026-02-15', author: 'Luc R.',       notes: 'Pitch wheel not returning to centre. Several panel LEDs not illuminating.', status: null, score: null, labels_added: ['needs_investigation'], labels_removed: [] },
+    ]
+  },
+  {
+    id: 'i5', airtable_id: 'AT-0055', display_name: 'Korg MS-20 (early)', serial_number: '100423',
+    status: 'working', labels: [],
+    log: [
+      { id: 'l11', type: 'assessment', date: '2025-09-10', author: 'Petra K.', notes: 'Both oscillators stable. Filter working and self-oscillating. All patch points functional.', status: 'working', score: 8, labels_added: [], labels_removed: [] },
+      { id: 'l12', type: 'cleaning',   date: '2025-10-02', author: 'Luc R.',   notes: 'Panel cleaned. Knob caps stabilised. Patch bay contacts cleaned.', status: null, score: 9, labels_added: [], labels_removed: [] },
+    ]
+  },
+  {
+    id: 'i6', airtable_id: 'AT-0061', display_name: 'Sequential Prophet-5', serial_number: '1823',
+    status: 'broken', labels: ['needs_repair', 'needs_investigation'],
+    log: [
+      { id: 'l13', type: 'assessment',   date: '2026-01-05', author: 'Petra K.',     notes: 'Voices 2 and 4 intermittent. Patch memory intact. Needs voice card inspection.', status: 'broken', score: 5, labels_added: ['needs_repair'], labels_removed: [] },
+      { id: 'l14', type: 'repair',       date: '2026-01-20', author: 'Jean-Marc B.', notes: 'Reseated voice card connectors. Voice 4 stable. Voice 2 still dropping — CEM3340 suspected. Replacement ordered.', status: null, score: 6, labels_added: [], labels_removed: [] },
+      { id: 'l15', type: 'fault_report', date: '2026-02-10', author: 'Luc R.',       notes: 'Pitch wheel not returning to centre. Spring feels weak.', status: null, score: null, labels_added: ['needs_investigation'], labels_removed: [] },
+    ]
+  },
+  {
+    id: 'i7', airtable_id: 'AT-0023', display_name: 'Yamaha CS-80', serial_number: '3041',
+    status: 'broken', labels: ['needs_repair'],
+    log: [
+      { id: 'l16', type: 'assessment', date: '2025-12-01', author: 'Petra K.',     notes: 'Several keys not sounding. Ribbon unresponsive. PSU slightly low on +15V.', status: 'broken', score: 4, labels_added: ['needs_repair'], labels_removed: [] },
+      { id: 'l17', type: 'repair',     date: '2026-01-10', author: 'Jean-Marc B.', notes: 'Recapped PSU. Eight keys restored. Ribbon replaced and working.', status: null, score: 7, labels_added: [], labels_removed: [] },
+      { id: 'l18', type: 'assessment', date: '2026-02-20', author: 'Petra K.',     notes: 'Mostly functional but persistent tuning drift on upper octave — temperature dependent. Not yet suitable for display.', status: null, score: 7, labels_added: [], labels_removed: [] },
+    ]
+  },
+  {
+    id: 'i8', airtable_id: 'AT-0014', display_name: 'EMS Synthi AKS', serial_number: 'AKS-0291',
+    status: 'unknown', labels: ['needs_investigation'],
+    log: [
+      { id: 'l19', type: 'assessment',   date: '2025-09-10', author: 'Petra K.',     notes: 'Pin matrix intact. Oscillators drifting. Full calibration required.', status: 'broken', score: 6, labels_added: ['needs_repair'], labels_removed: [] },
+      { id: 'l20', type: 'repair',       date: '2025-10-01', author: 'Jean-Marc B.', notes: 'Full calibration completed. All oscillators and noise source confirmed working.', status: 'working', score: 9, labels_added: [], labels_removed: ['needs_repair'] },
+      { id: 'l21', type: 'fault_report', date: '2026-03-10', author: 'Luc R.',       notes: 'Pin matrix joystick sticky, not springing back. Noticed during visitor demo.', status: 'unknown', score: null, labels_added: ['needs_investigation'], labels_removed: [] },
+    ]
+  },
+  {
+    id: 'i9', airtable_id: 'AT-0039', display_name: 'Roland TB-303', serial_number: '351822',
+    status: 'working', labels: [],
+    log: [
+      { id: 'l22', type: 'assessment', date: '2024-06-01', author: 'Petra K.', notes: 'All functions working. Accents and slides correct. Minor cosmetic wear only.', status: 'working', score: 9, labels_added: [], labels_removed: [] },
+    ]
+  },
+  {
+    id: 'i10', airtable_id: 'AT-0077', display_name: 'Buchla 200 System', serial_number: null,
+    status: 'unknown', labels: [],
+    log: []
+  },
+  {
+    id: 'i11', airtable_id: 'AT-0088', display_name: 'Korg Poly-61', serial_number: '290441',
+    status: 'retired', labels: [],
+    log: [
+      { id: 'l23', type: 'assessment', date: '2024-03-10', author: 'Jean-Marc B.', notes: 'Beyond economic repair. Multiple failed voice chips, corroded PCBs. Retained for donor parts.', status: 'retired', score: 1, labels_added: [], labels_removed: [] },
+    ]
+  },
+  {
+    id: 'i12', airtable_id: 'AT-0091', display_name: 'Roland Juno-60', serial_number: '447823',
+    status: 'disposed', labels: [],
+    log: [
+      { id: 'l24', type: 'assessment', date: '2024-01-15', author: 'Petra K.', notes: 'Duplicate unit. Sold to fund acquisition of ARP 2600.', status: 'disposed', score: null, labels_added: [], labels_removed: [] },
+    ]
+  },
+  {
+    id: 'i13', airtable_id: 'AT-0052', display_name: 'Korg MS-20 (late)', serial_number: '309871',
+    status: 'working', labels: ['needs_cleaning'],
+    log: [
+      { id: 'l25', type: 'assessment', date: '2026-02-01', author: 'Petra K.', notes: 'Fully functional. Both oscillators stable. Panel and knobs heavily soiled from previous owner.', status: 'working', score: 7, labels_added: ['needs_cleaning'], labels_removed: [] },
+    ]
+  },
+];
+
+let selectedId = null;
+let activeFilter = 'all';
+
+function getScore(inst) {
+  const scored = inst.log.filter(e => e.score !== null);
+  return scored.length ? scored[scored.length - 1].score : null;
+}
+
+// Filters
+function renderFilters() {
+  const c = document.getElementById('sidebarFilters');
+  c.innerHTML = '<button class="filter-chip active" onclick="setFilter(\'all\', this)">All</button>';
+  STATUSES.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-chip';
+    btn.textContent = s.label;
+    btn.onclick = function() { setFilter(s.key, this); };
+    c.appendChild(btn);
+  });
+  const dr = document.createElement('button');
+  dr.className = 'filter-chip';
+  dr.textContent = 'Display ready';
+  dr.onclick = function() { setFilter('display_ready', this); };
+  c.appendChild(dr);
+}
+
+function setFilter(filter, el) {
+  activeFilter = filter;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderInstrumentList();
+}
+
+function renderInstrumentList() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const list = document.getElementById('instrumentList');
+  list.innerHTML = '';
+
+  instruments.forEach(inst => {
+    if (activeFilter === 'display_ready' && !isDisplayReady(inst)) return;
+    if (activeFilter !== 'all' && activeFilter !== 'display_ready' && inst.status !== activeFilter) return;
+    if (search && !inst.display_name.toLowerCase().includes(search) &&
+        !(inst.serial_number && inst.serial_number.toLowerCase().includes(search))) return;
+
+    const div = document.createElement('div');
+    div.className = 'instrument-item' + (inst.id === selectedId ? ' active' : '');
+    div.onclick = () => selectInstrument(inst.id);
+
+    const labelPips = inst.labels.map(l => {
+      const def = getLabelDef(l);
+      return def ? `<span class="label-tag ${def.cls}" style="font-size:8px;padding:1px 5px;">${def.label}</span>` : '';
+    }).join('');
+
+    div.innerHTML = `
+      <div class="instrument-name">${inst.display_name}</div>
+      <div class="instrument-serial">${inst.serial_number ? 'S/N ' + inst.serial_number : 'no serial'}</div>
+      <div class="instrument-meta">
+        <div class="status-dot s-${inst.status}"></div>
+        <span class="status-label-small">${inst.status}</span>
+        ${isDisplayReady(inst) ? '<span style="font-family:var(--mono);font-size:8px;color:var(--green);border:1px solid var(--green-dim);padding:1px 5px;border-radius:2px;">display ready</span>' : ''}
+        <span class="entry-count">${inst.log.length}</span>
+      </div>
+      ${inst.labels.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;">${labelPips}</div>` : ''}
+    `;
+    list.appendChild(div);
+  });
+}
+
+function selectInstrument(id) {
+  saveDraft();
+  selectedId = id;
+  const inst = instruments.find(i => i.id === id);
+  if (!inst) return;
+  renderInstrumentList();
+
+  document.getElementById('addLogBtn').style.display = '';
+  closeEntryForm();
+  document.getElementById('instrTitle').textContent = inst.display_name;
+  document.getElementById('instrId').textContent =
+    `${inst.airtable_id}  ·  ${inst.serial_number ? 'S/N ' + inst.serial_number : 'no serial number'}`;
+
+  const badge = document.getElementById('statusBadge');
+  badge.textContent = inst.status;
+  badge.className = `status-badge tag-${inst.status}`;
+
+  renderLabelsStrip(inst);
+  renderDisplayReadyBadge(inst);
+
+  const score = getScore(inst);
+  const bar = document.getElementById('scoreBar');
+  bar.innerHTML = '';
+  for (let i = 1; i <= 10; i++) {
+    const pip = document.createElement('div');
+    const filled = score && i <= score;
+    pip.className = 'score-pip' + (filled ? ' filled' + (score <= 3 ? ' low' : score >= 8 ? ' high' : '') : '');
+    bar.appendChild(pip);
+  }
+  document.getElementById('scoreValue').textContent = score ? `${score}/10` : '—';
+
+  const last = inst.log[inst.log.length - 1];
+  document.getElementById('lastEntry').textContent = last
+    ? new Date(last.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+  document.getElementById('entryCount').textContent = inst.log.length;
+
+  renderLog(inst);
+
+  document.getElementById('statusHint').style.opacity = '0';
+  const terminal = inst.status === 'retired' || inst.status === 'disposed';
+  const statusSelect = document.getElementById('entryNewStatus');
+  statusSelect.disabled = terminal;
+  statusSelect.style.opacity = terminal ? '0.35' : '1';
+
+  restoreDraft(id);
+}
+
+function renderDisplayReadyBadge(inst) {
+  const el = document.getElementById('displayReadyBadge');
+  if (!el) return;
+  const ready = isDisplayReady(inst);
+  el.innerHTML = `<span style="
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 4px 10px;
+    border: 1px solid ${ready ? 'var(--green)' : 'var(--red)'};
+    color: ${ready ? 'var(--green)' : 'var(--red)'};
+    background: ${ready ? 'rgba(74,158,110,0.08)' : 'rgba(158,74,74,0.08)'};
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    opacity: ${ready ? '1' : '0.7'};
+    white-space: nowrap;
+  ">${ready ? '✓' : '✗'} Display ready</span>`;
+}
+
+function renderLabelsStrip(inst) {
+  const strip = document.getElementById('labelsStrip');
+  strip.innerHTML = '';
+
+  if (!inst.labels.length) {
+    strip.innerHTML = '<span class="labels-empty">No active labels</span>';
+    return;
+  }
+
+  const lbl = document.createElement('span');
+  lbl.className = 'labels-empty';
+  lbl.textContent = 'Labels:';
+  strip.appendChild(lbl);
+
+  inst.labels.forEach(key => {
+    const def = getLabelDef(key);
+    if (!def) return;
+    const tag = document.createElement('span');
+    tag.className = `label-tag ${def.cls}`;
+    tag.textContent = def.label;
+    strip.appendChild(tag);
+  });
+}
+
+function dismissLabel(instId, labelKey) {
+  const inst = instruments.find(i => i.id === instId);
+  if (!inst) return;
+  inst.labels = inst.labels.filter(l => l !== labelKey);
+  selectInstrument(instId);
+}
+
+function renderLog(inst) {
+  const area = document.getElementById('logEntries');
+  area.innerHTML = '';
+  if (!inst.log.length) {
+    area.innerHTML = '<div class="empty-state">No log entries yet</div>';
+    return;
+  }
+  [...inst.log].reverse().forEach((entry, i, arr) => {
+    const prev = arr[i + 1];
+    const prevScore = prev ? prev.score : null;
+    let scoreDelta = '';
+    if (entry.score !== null && prevScore !== null) {
+      const diff = entry.score - prevScore;
+      if (diff > 0) scoreDelta = `<span class="condition-change up">▲ ${diff}</span>`;
+      else if (diff < 0) scoreDelta = `<span class="condition-change down">▼ ${Math.abs(diff)}</span>`;
+    }
+    const scoreTag = entry.score !== null
+      ? `<span style="font-family:var(--mono);font-size:9px;color:var(--text3);border:1px solid var(--border2);padding:2px 6px;border-radius:2px;">${entry.score}/10</span>` : '';
+    const statusTag = entry.status
+      ? `<span class="status-change-tag tag-${entry.status}">→ ${entry.status}</span>` : '';
+    const labelTags = [
+      ...(entry.labels_added   || []).map(key => { const d = getLabelDef(key); return d ? `<span class="log-label-tag ${d.cls}">+ ${d.label}</span>` : ''; }),
+      ...(entry.labels_removed || []).map(key => { const d = getLabelDef(key); return d ? `<span class="log-label-tag" style="color:var(--text3);border-color:var(--border2);text-decoration:line-through;">− ${d.label}</span>` : ''; }),
+    ].join('');
+
+    const d = new Date(entry.date);
+    const div = document.createElement('div');
+    div.className = 'log-entry';
+    const attachments = (entry.attachments || []);
+    const attachHtml = attachments.length ? `<div class="log-attachments">${attachments.map(a => {
+      if (a.type && a.type.startsWith('image/')) {
+        return `<div class="log-attach-thumb" onclick="window.open('${a.url}','_blank')"><img src="${a.url}" alt="${a.name}"></div>`;
+      } else {
+        return `<div class="log-attach-thumb" onclick="window.open('${a.url}','_blank')"><span class="attach-name">${a.name}</span></div>`;
+      }
+    }).join('')}</div>` : '';
+
+    div.innerHTML = `
+      <div>
+        <div class="log-date">${d.toLocaleDateString('en-GB', { day:'numeric', month:'short' })}<br>${d.getFullYear()}</div>
+        <div class="log-author">${entry.author}</div>
+      </div>
+      <div>
+        <div class="log-top">
+          <span class="entry-type-tag ${entry.type}">${entry.type.replace('_', ' ')}</span>
+          ${statusTag}${labelTags}${scoreTag}${scoreDelta}
+        </div>
+        <div class="log-notes">${entry.notes}</div>
+        ${attachHtml}
+      </div>`;
+    area.appendChild(div);
+  });
+}
+
+function onStatusChange() {
+  const inst = instruments.find(i => i.id === selectedId);
+  const selected = document.getElementById('entryNewStatus').value;
+  const hint = document.getElementById('statusHint');
+  if (inst && selected !== inst.status) {
+    // Check if this matches what inference would suggest
+    const type = document.getElementById('entryType').value;
+    const inferred = type ? inferPendingLabels(type, inst.status, inst.labels) : {};
+    if (inferred['__status'] && selected === inferred['__status']) {
+      hint.textContent = '← inferred';
+      hint.style.color = 'var(--amber)';
+    } else {
+      hint.textContent = '← manual override';
+      hint.style.color = 'var(--red)';
+    }
+    hint.style.opacity = '1';
+  } else {
+    hint.textContent = '';
+    hint.style.opacity = '0';
+  }
+  // Re-infer labels based on new status without touching the dropdown again
+  const newStatus = selected || (inst ? inst.status : 'unknown');
+  const type = document.getElementById('entryType').value;
+  const inferred = type ? inferPendingLabels(type, newStatus, inst.labels) : {};
+  pendingLabels = Object.fromEntries(Object.entries(inferred).filter(([k]) => k !== '__status'));
+  renderLabelsFormRow();
+  renderDisplayReadyPreview();
+}
+
+function addEntry() {
+  if (!selectedId) return;
+  const inst = instruments.find(i => i.id === selectedId);
+  const type      = document.getElementById('entryType').value;
+  const newStatus = document.getElementById('entryNewStatus').value || null;
+  const scoreVal  = document.getElementById('entryScore').value;
+  const currentScore = getScore(inst);
+  const effectiveScore = scoreVal && parseInt(scoreVal) !== currentScore ? parseInt(scoreVal) : null;
+  const date      = document.getElementById('entryDate').value;
+  const notes     = document.getElementById('entryNotes').value.trim();
+
+  if (!notes) {
+    document.getElementById('entryNotes').style.borderColor = 'var(--red)';
+    setTimeout(() => document.getElementById('entryNotes').style.borderColor = '', 1000);
+    return;
+  }
+
+  const terminal = inst.status === 'retired' || inst.status === 'disposed';
+  const selectedStatus = document.getElementById('entryNewStatus').value;
+  const effectiveStatus = (!terminal && selectedStatus && selectedStatus !== inst.status) ? selectedStatus : null;
+  if (effectiveStatus) inst.status = effectiveStatus;
+
+  // Apply pending label changes
+  const labelsAdded = [], labelsRemoved = [];
+  Object.entries(pendingLabels).forEach(([key, action]) => {
+    if (action === 'add' && !inst.labels.includes(key)) {
+      inst.labels.push(key);
+      labelsAdded.push(key);
+    } else if (action === 'remove') {
+      inst.labels = inst.labels.filter(l => l !== key);
+      labelsRemoved.push(key);
+    }
+  });
+
+  inst.log.push({
+    id: 'l' + Date.now(), type,
+    date: date || new Date().toISOString().split('T')[0],
+    author: 'You (curator)', notes,
+    status: effectiveStatus,
+    score: effectiveScore,
+    labels_added: labelsAdded,
+    labels_removed: labelsRemoved,
+    attachments: stagedFiles.map(f => ({ name: f.name, type: f.type, url: f.url })),
+  });
+
+  stagedFiles = [];
+  pendingLabels = {};
+  clearDraft(selectedId);
+
+  selectInstrument(selectedId);
+}
+
+function openStatusModal() {
+  if (!selectedId) return;
+  const inst = instruments.find(i => i.id === selectedId);
+  const opts = document.getElementById('statusOptions');
+  opts.innerHTML = '';
+  STATUSES.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'status-option';
+    div.onclick = () => applyStatus(s.key);
+    div.innerHTML = `
+      <div class="status-dot s-${s.key}"></div>
+      <div>
+        <div class="status-option-label" style="${s.key === inst.status ? 'color:var(--amber)' : ''}">${s.label}${s.key === inst.status ? ' ✓' : ''}</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:1px;">${s.desc}</div>
+      </div>`;
+    opts.appendChild(div);
+  });
+  document.getElementById('statusModal').classList.add('open');
+}
+
+function applyStatus(statusKey) {
+  if (!selectedId) return;
+  const inst = instruments.find(i => i.id === selectedId);
+  if (statusKey === inst.status) { closeStatusModal(); return; }
+  inst.status = statusKey;
+  inst.log.push({
+    id: 'l' + Date.now(), type: 'other',
+    date: new Date().toISOString().split('T')[0],
+    author: 'You (curator)',
+    notes: `Status set to "${statusKey}".`,
+    status: statusKey, score: null, labels_added: [],
+  });
+  closeStatusModal();
+  selectInstrument(selectedId);
+}
+
+function closeStatusModal(e) {
+  if (e && e.target !== document.getElementById('statusModal')) return;
+  document.getElementById('statusModal').classList.remove('open');
+}
+
+renderFilters();
+renderInstrumentList();
+document.getElementById('entryDate').value = new Date().toISOString().split('T')[0];
+</script>
+</body>
+</html>
