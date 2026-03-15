@@ -43,29 +43,37 @@ export function renderLabelsStrip(instrument) {
 
 /**
  * Render the score bar and related stats.
+ * @param {Object} instrument - instrument (may have empty log if guest)
+ * @param {Object} capabilities - current session capabilities
+ * @param {Object} rawInstrument - instrument with full log (for score/stats even when log is hidden)
  */
-export function renderScoreStrip(instrument) {
-  const score = getScore(instrument);
+export function renderScoreStrip(instrument, capabilities, rawInstrument) {
+  const src = rawInstrument || instrument;
+  const score = capabilities.viewScores ? getScore(src) : null;
 
   // Score bar
   const bar = document.getElementById('scoreBar');
   bar.innerHTML = '';
-  for (let i = 1; i <= 10; i++) {
-    const pip = document.createElement('div');
-    const filled = score && i <= score;
-    pip.className = 'score-pip' + (filled ? ' filled' + (score <= 3 ? ' low' : score >= 8 ? ' high' : '') : '');
-    bar.appendChild(pip);
+  if (capabilities.viewScores) {
+    for (let i = 1; i <= 10; i++) {
+      const pip = document.createElement('div');
+      const filled = score && i <= score;
+      pip.className = 'score-pip' + (filled ? ' filled' + (score <= 3 ? ' low' : score >= 8 ? ' high' : '') : '');
+      bar.appendChild(pip);
+    }
+    document.getElementById('scoreValue').textContent = score ? `${score}/10` : '—';
+  } else {
+    document.getElementById('scoreValue').textContent = '—';
   }
-  document.getElementById('scoreValue').textContent = score ? `${score}/10` : '—';
 
   // Last entry date
-  const last = instrument.log[instrument.log.length - 1];
+  const last = src.log[src.log.length - 1];
   document.getElementById('lastEntry').textContent = last
     ? new Date(last.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
     : '—';
 
   // Entry count
-  document.getElementById('entryCount').textContent = instrument.log.length;
+  document.getElementById('entryCount').textContent = src.log.length;
 }
 
 /**

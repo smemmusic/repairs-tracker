@@ -3,6 +3,22 @@ import { getLabelDef } from '../domain/constants.js';
 import { isDisplayReady } from '../domain/computed.js';
 
 /**
+ * Update the sidebar header to show the logged-in user.
+ * @param {Object} session - { user, capabilities }
+ */
+export function renderUserInfo(session) {
+  const el = document.getElementById('userInfo');
+  if (!el) return;
+  if (session.user) {
+    el.textContent = session.user.name;
+    el.style.color = 'var(--green)';
+  } else {
+    el.textContent = 'Guest';
+    el.style.color = 'var(--text3)';
+  }
+}
+
+/**
  * Render filter chips in the sidebar.
  * @param {Function} onFilter - callback(filterKey) when a filter is clicked
  */

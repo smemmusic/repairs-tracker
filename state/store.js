@@ -1,4 +1,5 @@
 const state = {
+  session: null,       // { user, capabilities } from auth
   selectedId: null,
   activeFilter: 'all',
   pendingLabels: {},   // map of label key → 'add' | 'remove'

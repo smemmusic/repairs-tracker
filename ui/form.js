@@ -47,8 +47,58 @@ export function readFormValues() {
     score: document.getElementById('entryScore').value,
     date: document.getElementById('entryDate').value,
     notes: document.getElementById('entryNotes').value,
+    contributorId: document.getElementById('entryContributor')?.value || null,
     formOpen: document.getElementById('addEntryPanel').style.display === 'block',
   };
+}
+
+/**
+ * Populate the contributor dropdown.
+ * @param {Array} contributors - array of { id, name }
+ * @param {string|null} selectedUserId - the logged-in user's contributor id to pre-select
+ */
+export function populateContributors(contributors, selectedUserId) {
+  const select = document.getElementById('entryContributor');
+  if (!select) return;
+  select.innerHTML = contributors.map(c =>
+    `<option value="${c.id}"${c.id === selectedUserId ? ' selected' : ''}>${c.name}</option>`
+  ).join('');
+}
+
+/**
+ * Apply capability restrictions to the form controls.
+ * Hides/disables controls the user can't use.
+ * @param {Object} capabilities - current session capabilities
+ */
+export function applyCapabilities(capabilities) {
+  const typeSelect = document.getElementById('entryType');
+  const statusGroup = document.getElementById('statusGroup');
+  const scoreGroup = document.getElementById('scoreGroup');
+  const labelsGroup = document.getElementById('labelsFormGroup');
+  const displayReadyGroup = document.getElementById('displayReadyGroup');
+  const contributorGroup = document.getElementById('contributorGroup');
+
+  // Restrict entry types for guests
+  if (!capabilities.submitOtherEntryTypes) {
+    Array.from(typeSelect.options).forEach(opt => {
+      if (opt.value && opt.value !== 'fault_report') {
+        opt.disabled = true;
+        opt.style.display = 'none';
+      }
+    });
+  } else {
+    Array.from(typeSelect.options).forEach(opt => {
+      opt.disabled = false;
+      opt.style.display = '';
+    });
+  }
+
+  // Hide status, score, labels, display-ready for guests
+  if (statusGroup) statusGroup.style.display = capabilities.setStatus ? '' : 'none';
+  if (scoreGroup) scoreGroup.style.display = capabilities.viewScores ? '' : 'none';
+  if (labelsGroup) labelsGroup.style.display = capabilities.setLabels ? '' : 'none';
+  if (displayReadyGroup) displayReadyGroup.style.display = capabilities.viewScores ? '' : 'none';
+  if (contributorGroup) contributorGroup.style.display = capabilities.submitOtherEntryTypes ? '' : 'none';
 }
 
 /**
