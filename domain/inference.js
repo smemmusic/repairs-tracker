@@ -23,6 +23,7 @@ const LABEL_RULES = [
   { entryType: EntryType.ASSESSMENT,    status: Status.WORKING, label: Label.NEEDS_REPAIR,        action: LabelAction.REMOVE },
   { entryType: EntryType.REPAIR,        status: Status.WORKING, label: Label.NEEDS_REPAIR,        action: LabelAction.REMOVE },
   { entryType: EntryType.REPAIR,        status: Status.WORKING, label: Label.NEEDS_INVESTIGATION, action: LabelAction.REMOVE },
+  { entryType: EntryType.REPAIR,        status: Status.WORKING, label: Label.NEEDS_PARTS,         action: LabelAction.REMOVE },
   { entryType: EntryType.CLEANING,      status: null,           label: Label.NEEDS_CLEANING,      action: LabelAction.REMOVE },
 ];
 
