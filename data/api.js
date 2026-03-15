@@ -2,8 +2,22 @@ import { instruments as seedData, contributors } from './seed.js';
 import { getScore, isDisplayReady } from '../domain/computed.js';
 import { getSession } from './auth.js';
 
-// In-memory store — will be replaced by fetch() calls to FastAPI
-const instruments = structuredClone(seedData);
+// In-memory store backed by localStorage — will be replaced by fetch() calls to FastAPI
+import { STORAGE_KEY_INSTRUMENTS } from '../domain/constants.js';
+
+function loadInstruments() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY_INSTRUMENTS);
+    if (stored) return JSON.parse(stored);
+  } catch (e) { /* ignore corrupt data */ }
+  return structuredClone(seedData);
+}
+
+function persist() {
+  localStorage.setItem(STORAGE_KEY_INSTRUMENTS, JSON.stringify(instruments));
+}
+
+const instruments = loadInstruments();
 
 /**
  * List all contributors.
@@ -156,6 +170,7 @@ export async function addLogEntry(instrumentId, entry) {
   };
 
   inst.log.push(logEntry);
+  persist();
 
   return { instrument: inst, logEntry };
 }

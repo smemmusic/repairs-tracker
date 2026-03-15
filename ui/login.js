@@ -8,7 +8,7 @@ export function showLoginScreen(onAuthenticated) {
   const overlay = document.getElementById('loginOverlay');
   const users = getLoginUsers();
 
-  const userOptions = users.map(u =>
+  const userOptions = '<option value="">— select user —</option>' + users.map(u =>
     `<option value="${u.drupal_user_id}">${u.name}</option>`
   ).join('');
 

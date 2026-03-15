@@ -1,6 +1,6 @@
 import { contributors } from './seed.js';
 
-const DEMO_PASSWORD = 'smem';
+import { DEMO_PASSWORD, STORAGE_KEY_SESSION } from '../domain/constants.js';
 
 const AUTHENTICATED_CAPABILITIES = {
   viewLogHistory: true,
@@ -22,6 +22,14 @@ const GUEST_CAPABILITIES = {
 
 let currentSession = null;
 
+function persistSession() {
+  if (currentSession) {
+    localStorage.setItem(STORAGE_KEY_SESSION, JSON.stringify(currentSession));
+  } else {
+    localStorage.removeItem(STORAGE_KEY_SESSION);
+  }
+}
+
 /**
  * Log in with a drupal_user_id and password.
  * Returns { user, capabilities } or throws on failure.
@@ -41,6 +49,7 @@ export async function login(userId, password) {
     capabilities: { ...AUTHENTICATED_CAPABILITIES },
   };
 
+  persistSession();
   return currentSession;
 }
 
@@ -54,13 +63,21 @@ export async function loginAsGuest() {
     capabilities: { ...GUEST_CAPABILITIES },
   };
 
+  persistSession();
   return currentSession;
 }
 
 /**
  * Get the current session, or null if not logged in.
+ * Restores from localStorage if available.
  */
 export async function getSession() {
+  if (!currentSession) {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY_SESSION);
+      if (stored) currentSession = JSON.parse(stored);
+    } catch (e) { /* ignore */ }
+  }
   return currentSession;
 }
 
@@ -69,6 +86,7 @@ export async function getSession() {
  */
 export function logout() {
   currentSession = null;
+  persistSession();
 }
 
 /**

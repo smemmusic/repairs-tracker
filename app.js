@@ -7,6 +7,7 @@ import { renderDetailHeader, renderLabelsStrip, renderScoreStrip, renderDisplayR
 import { renderLog } from './ui/log.js';
 import * as form from './ui/form.js';
 import { showLoginScreen } from './ui/login.js';
+import { getSession, logout } from './data/auth.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -284,15 +285,19 @@ async function startApp(session) {
   // Apply form capabilities
   form.applyCapabilities(session.capabilities);
 
-  // Wire up event listeners
-  document.getElementById('searchInput').addEventListener('input', refreshSidebar);
-  document.getElementById('addLogBtn').addEventListener('click', () => form.toggleForm());
-  document.getElementById('entryType').addEventListener('change', reInferLabels);
-  document.getElementById('entryNewStatus').addEventListener('change', onStatusChange);
-  document.getElementById('entryScore').addEventListener('change', updateDisplayReadyPreview);
-  document.getElementById('entryFiles').addEventListener('change', onFilesSelected);
-  document.getElementById('submitBtn').addEventListener('click', addEntry);
-  document.querySelector('.attach-btn').addEventListener('click', () => document.getElementById('entryFiles').click());
+  // Wire up event listeners (only once)
+  if (!startApp._wired) {
+    startApp._wired = true;
+    document.getElementById('searchInput').addEventListener('input', refreshSidebar);
+    document.getElementById('addLogBtn').addEventListener('click', () => form.toggleForm());
+    document.getElementById('entryType').addEventListener('change', reInferLabels);
+    document.getElementById('entryNewStatus').addEventListener('change', onStatusChange);
+    document.getElementById('entryScore').addEventListener('change', updateDisplayReadyPreview);
+    document.getElementById('entryFiles').addEventListener('change', onFilesSelected);
+    document.getElementById('submitBtn').addEventListener('click', addEntry);
+    document.querySelector('.attach-btn').addEventListener('click', () => document.getElementById('entryFiles').click());
+    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+  }
 
   // Initial render
   renderFilters(onFilterChange);
@@ -300,5 +305,22 @@ async function startApp(session) {
   document.getElementById('entryDate').value = new Date().toISOString().split('T')[0];
 }
 
-// Show login screen on page load
-showLoginScreen(startApp);
+function handleLogout() {
+  logout();
+  store.set('session', null);
+  store.set('selectedId', null);
+  document.getElementById('app').style.display = 'none';
+  showLoginScreen(startApp);
+}
+
+// Check for existing session on page load
+async function boot() {
+  const existing = await getSession();
+  if (existing) {
+    startApp(existing);
+  } else {
+    showLoginScreen(startApp);
+  }
+}
+
+boot();
