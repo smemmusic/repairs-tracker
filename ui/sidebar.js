@@ -1,6 +1,7 @@
 import { STATUSES, Filter } from '../domain/constants.js';
 import { getLabelDef } from '../domain/constants.js';
 import { isDisplayReady } from '../domain/computed.js';
+import { esc } from './shared.js';
 
 /**
  * Update the sidebar header to show the logged-in user.
@@ -75,11 +76,11 @@ export function renderInstrumentList(instruments, selectedId, onSelect) {
     const displayReady = isDisplayReady(inst);
 
     div.innerHTML = `
-      <div class="instrument-name">${inst.display_name}</div>
-      <div class="instrument-serial">${inst.serial_number ? 'S/N ' + inst.serial_number : 'no serial'}</div>
+      <div class="instrument-name">${esc(inst.display_name)}</div>
+      <div class="instrument-serial">${inst.serial_number ? 'S/N ' + esc(inst.serial_number) : 'no serial'}</div>
       <div class="instrument-meta">
-        <div class="status-dot s-${inst.status}"></div>
-        <span class="status-label-small">${inst.status}</span>
+        <div class="status-dot s-${esc(inst.status)}"></div>
+        <span class="status-label-small">${esc(inst.status)}</span>
         ${displayReady ? '<span class="display-ready-tag-sm">display ready</span>' : ''}
         <span class="entry-count">${inst.log.length}</span>
       </div>

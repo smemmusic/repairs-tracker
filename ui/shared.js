@@ -1,4 +1,13 @@
 /**
+ * Escape a string for safe insertion into HTML.
+ */
+export function esc(str) {
+  const el = document.createElement('span');
+  el.textContent = str;
+  return el.innerHTML.replace(/\n/g, '<br/>');
+}
+
+/**
  * Render a display-ready badge with tooltip as an HTML string.
  * @param {Array} checks - array of { label, pass }
  */

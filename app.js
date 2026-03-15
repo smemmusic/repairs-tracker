@@ -251,7 +251,6 @@ async function onEditLogEntry(logEntryId) {
     location: entry.location || '',
     notes: entry.notes,
   });
-  document.getElementById('entryType').disabled = true;
   document.getElementById('submitBtn').disabled = false;
 
   // Pre-fill pending labels from the entry's deltas
@@ -287,6 +286,7 @@ async function reInferLabels() {
   const statusSelect = document.getElementById('entryNewStatus');
 
   document.getElementById('submitBtn').disabled = !type;
+  statusSelect.disabled = !type;
 
   if (!type) {
     statusSelect.value = raw.status;
@@ -415,7 +415,6 @@ async function startApp(session) {
     document.getElementById('addLogBtn').addEventListener('click', () => {
       if (store.get('editingEntryId')) {
         store.set('editingEntryId', null);
-        document.getElementById('entryType').disabled = false;
       }
       form.toggleForm();
     });

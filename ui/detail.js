@@ -1,6 +1,6 @@
 import { getLabelDef } from '../domain/constants.js';
 import { getScore, getLocation, getDisplayReadyChecks } from '../domain/computed.js';
-import { displayReadyBadgeHTML } from './shared.js';
+import { displayReadyBadgeHTML, esc } from './shared.js';
 
 /**
  * Render the instrument detail header (title, serial, location, status badge).
@@ -14,7 +14,7 @@ export function renderDetailHeader(instrument) {
 
   const badge = document.getElementById('statusBadge');
   badge.textContent = instrument.status;
-  badge.className = `status-badge tag-${instrument.status}`;
+  badge.className = `status-badge tag-${esc(instrument.status)}`;
 }
 
 /**

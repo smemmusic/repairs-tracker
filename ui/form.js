@@ -1,6 +1,6 @@
 import { LABELS, EntryType, LabelAction } from '../domain/constants.js';
 import { getScore, getDisplayReadyChecks } from '../domain/computed.js';
-import { displayReadyBadgeHTML } from './shared.js';
+import { displayReadyBadgeHTML, esc } from './shared.js';
 
 /**
  * Open the entry form panel and update button text.
@@ -124,6 +124,7 @@ export function setFormValues(values) {
   document.getElementById('entryLocation').value = values.location || '';
   document.getElementById('entryNotes').value = values.notes || '';
   document.getElementById('submitBtn').disabled = !values.type;
+  document.getElementById('entryNewStatus').disabled = !values.type;
 }
 
 /**
@@ -314,9 +315,9 @@ export function renderAttachPreview(stagedFiles, onRemove) {
     const thumb = document.createElement('div');
     thumb.className = 'attach-thumb';
     if (f.type.startsWith('image/')) {
-      thumb.innerHTML = `<img src="${f.url}" alt="${f.name}"><button class="attach-remove" onclick="event.stopPropagation()">✕</button>`;
+      thumb.innerHTML = `<img src="${esc(f.url)}" alt="${esc(f.name)}"><button class="attach-remove">✕</button>`;
     } else {
-      thumb.innerHTML = `<span class="attach-name">${f.name}</span><button class="attach-remove" onclick="event.stopPropagation()">✕</button>`;
+      thumb.innerHTML = `<span class="attach-name">${esc(f.name)}</span><button class="attach-remove">✕</button>`;
     }
     thumb.querySelector('.attach-remove').onclick = (e) => { e.stopPropagation(); onRemove(i); };
     container.appendChild(thumb);
