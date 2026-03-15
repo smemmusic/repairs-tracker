@@ -6,7 +6,7 @@ import { getScore } from '../domain/computed.js';
  * Open the entry form panel and update button text.
  */
 export function openForm() {
-  document.getElementById('addEntryPanel').style.display = 'block';
+  document.getElementById('addEntryPanel').classList.add('open');
   document.getElementById('addLogBtn').textContent = '← View log';
 }
 
@@ -14,7 +14,7 @@ export function openForm() {
  * Close the entry form panel and update button text.
  */
 export function closeForm() {
-  document.getElementById('addEntryPanel').style.display = 'none';
+  document.getElementById('addEntryPanel').classList.remove('open');
   document.getElementById('addLogBtn').textContent = '+ New entry';
 }
 
@@ -23,7 +23,7 @@ export function closeForm() {
  */
 export function toggleForm() {
   const panel = document.getElementById('addEntryPanel');
-  if (panel.style.display === 'block') {
+  if (panel.classList.contains('open')) {
     closeForm();
   } else {
     openForm();
@@ -34,7 +34,7 @@ export function toggleForm() {
  * Show the add-log button (hidden until an instrument is selected).
  */
 export function showFormButton() {
-  document.getElementById('addLogBtn').style.display = '';
+  document.getElementById('addLogBtn').classList.remove('hidden');
 }
 
 /**
@@ -48,7 +48,7 @@ export function readFormValues() {
     date: document.getElementById('entryDate').value,
     notes: document.getElementById('entryNotes').value,
     contributorId: document.getElementById('entryContributor')?.value || null,
-    formOpen: document.getElementById('addEntryPanel').style.display === 'block',
+    formOpen: document.getElementById('addEntryPanel').classList.contains('open'),
   };
 }
 
@@ -72,9 +72,7 @@ export function populateContributors(contributors, selectedUserId) {
  */
 export function applyCapabilities(capabilities) {
   const typeSelect = document.getElementById('entryType');
-  const statusGroup = document.getElementById('statusGroup');
   const scoreGroup = document.getElementById('scoreGroup');
-  const labelsGroup = document.getElementById('labelsFormGroup');
   const displayReadyGroup = document.getElementById('displayReadyGroup');
   const contributorGroup = document.getElementById('contributorGroup');
 
@@ -86,19 +84,18 @@ export function applyCapabilities(capabilities) {
     Array.from(typeSelect.options).forEach(opt => {
       if (opt.value && opt.value !== 'fault_report') {
         opt.disabled = true;
-        opt.style.display = 'none';
+        opt.classList.add('hidden');
       }
     });
   } else {
     Array.from(typeSelect.options).forEach(opt => {
       opt.disabled = false;
-      opt.style.display = '';
+      opt.classList.remove('hidden');
     });
   }
 
   // Status: visible but read-only for guests (shows inferred value)
   const statusSelect = document.getElementById('entryNewStatus');
-  if (statusGroup) statusGroup.style.display = '';
   if (isGuest) statusSelect.disabled = true;
 
   // Date: read-only for guests
@@ -106,14 +103,11 @@ export function applyCapabilities(capabilities) {
   if (dateInput) dateInput.disabled = isGuest;
 
   // Score: hidden for guests
-  if (scoreGroup) scoreGroup.style.display = capabilities.viewScores ? '' : 'none';
-
-  // Labels: visible (rendered read-only by passing null onToggle callback)
-  if (labelsGroup) labelsGroup.style.display = '';
+  if (scoreGroup) scoreGroup.classList.toggle('hidden', !capabilities.viewScores);
 
   // Display-ready, contributor: hidden for guests
-  if (displayReadyGroup) displayReadyGroup.style.display = capabilities.viewScores ? '' : 'none';
-  if (contributorGroup) contributorGroup.style.display = isGuest ? 'none' : '';
+  if (displayReadyGroup) displayReadyGroup.classList.toggle('hidden', !capabilities.viewScores);
+  if (contributorGroup) contributorGroup.classList.toggle('hidden', isGuest);
 }
 
 /**
@@ -139,12 +133,12 @@ export function resetForm(instrument) {
     date: new Date().toISOString().split('T')[0],
     notes: '',
   });
-  document.getElementById('statusHint').style.opacity = '0';
+  clearStatusHint();
 
   const terminal = instrument.status === 'retired' || instrument.status === 'disposed';
   const statusSelect = document.getElementById('entryNewStatus');
   statusSelect.disabled = terminal;
-  statusSelect.style.opacity = terminal ? '0.35' : '1';
+  statusSelect.classList.toggle('terminal', terminal);
 }
 
 /**
@@ -154,17 +148,16 @@ export function configureStatusSelect(instrument) {
   const terminal = instrument.status === 'retired' || instrument.status === 'disposed';
   const statusSelect = document.getElementById('entryNewStatus');
   statusSelect.disabled = terminal;
-  statusSelect.style.opacity = terminal ? '0.35' : '1';
+  statusSelect.classList.toggle('terminal', terminal);
 }
 
 /**
  * Show status hint text (inferred or manual override).
  */
-export function showStatusHint(text, color) {
+export function showStatusHint(text, type) {
   const hint = document.getElementById('statusHint');
   hint.textContent = text;
-  hint.style.color = color;
-  hint.style.opacity = '1';
+  hint.className = `status-hint visible ${type}`;
 }
 
 /**
@@ -173,7 +166,7 @@ export function showStatusHint(text, color) {
 export function clearStatusHint() {
   const hint = document.getElementById('statusHint');
   hint.textContent = '';
-  hint.style.opacity = '0';
+  hint.className = 'status-hint';
 }
 
 /**
@@ -181,8 +174,8 @@ export function clearStatusHint() {
  */
 export function flashNotesError() {
   const el = document.getElementById('entryNotes');
-  el.style.borderColor = 'var(--red)';
-  setTimeout(() => { el.style.borderColor = ''; }, 1000);
+  el.classList.add('form-error');
+  setTimeout(() => el.classList.remove('form-error'), 1000);
 }
 
 /**
@@ -206,7 +199,7 @@ export function renderLabelsFormRow(instrument, pendingLabels, onToggle) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = `label-toggle ${cls}`;
-    if (readOnly) btn.style.cursor = 'default';
+    if (readOnly) btn.classList.add('readonly');
 
     if (onInstrument && pending !== 'remove') {
       btn.classList.add('active');
@@ -265,15 +258,10 @@ export function renderDisplayReadyPreview(projectedStatus, projectedScore, proje
   const allPass = checks.every(c => c.pass);
 
   container.innerHTML = `
-    <span style="position:relative;display:inline-block;" class="dr-preview-wrap">
-      <span style="font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:2px;
-        border:1px solid ${allPass ? 'var(--green)' : 'var(--red)'};
-        color:${allPass ? 'var(--green)' : 'var(--red)'};
-        background:${allPass ? 'rgba(74,158,110,0.08)' : 'rgba(158,74,74,0.08)'};
-        font-weight:500;opacity:${allPass ? '1' : '0.7'};cursor:default;text-transform:uppercase;letter-spacing:0.06em;
-      ">${allPass ? '✓' : '✗'} Display ready</span>
+    <span class="dr-preview-wrap">
+      <span class="display-ready-badge ${allPass ? 'pass' : 'fail'}">${allPass ? '✓' : '✗'} Display ready</span>
       <span class="dr-tooltip">${checks.map(c =>
-        `<span style="color:${c.pass ? 'var(--green)' : 'var(--red)'};">${c.pass ? '✓' : '✗'} ${c.label}</span>`
+        `<span class="${c.pass ? 'dr-check-pass' : 'dr-check-fail'}">${c.pass ? '✓' : '✗'} ${c.label}</span>`
       ).join('')}</span>
     </span>
   `;

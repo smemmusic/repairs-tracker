@@ -13,7 +13,7 @@
 <div class="login-overlay" id="loginOverlay"></div>
 
 <!-- App (hidden until authenticated) -->
-<div class="app" id="app" style="display:none;">
+<div class="app hidden" id="app">
 
   <div class="sidebar">
     <div class="sidebar-header">
@@ -35,7 +35,7 @@
       </div>
       <a href="#" class="airtable-link" onclick="return false;">↗ Airtable</a>
       <div id="displayReadyBadge"></div>
-      <div class="status-badge tag-unknown" id="statusBadge" style="cursor:default;">unknown</div>
+      <div class="status-badge tag-unknown" id="statusBadge">unknown</div>
     </div>
 
     <div class="labels-strip" id="labelsStrip">
@@ -56,7 +56,7 @@
         <span class="score-lbl">Log entries</span>
         <span class="score-val" id="entryCount">—</span>
       </div>
-      <button class="add-log-btn" id="addLogBtn" style="display:none;">+ New entry</button>
+      <button class="add-log-btn hidden" id="addLogBtn">+ New entry</button>
     </div>
 
     <div class="log-area" id="logArea">
@@ -82,7 +82,7 @@
           </div>
           <div class="form-group" id="statusGroup">
             <label class="form-label">Status
-              <span id="statusHint" style="font-size:9px;opacity:0;transition:opacity 0.15s;"></span>
+              <span id="statusHint" class="status-hint"></span>
             </label>
             <select class="form-select" id="entryNewStatus">
               <option value="unknown">Unknown</option>
@@ -114,12 +114,12 @@
           <!-- Labels row -->
           <div class="form-group full" id="labelsFormGroup">
             <label class="form-label">Labels</label>
-            <div id="labelsFormRow" style="display:flex;gap:6px;flex-wrap:wrap;min-height:28px;align-items:center;"></div>
+            <div id="labelsFormRow" class="labels-form-row"></div>
           </div>
           <!-- Display ready preview -->
           <div class="form-group full" id="displayReadyGroup">
             <label class="form-label">Display ready after this entry</label>
-            <div id="displayReadyPreview" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;min-height:24px;"></div>
+            <div id="displayReadyPreview" class="dr-preview-row"></div>
           </div>
           <div class="form-group full">
             <label class="form-label">Attachments</label>
@@ -133,7 +133,7 @@
             <label class="form-label">Notes</label>
             <textarea class="form-textarea" id="entryNotes" placeholder="Describe the work done, findings, or next steps…"></textarea>
           </div>
-          <div class="form-group full" style="display:flex;justify-content:flex-end;">
+          <div class="form-group full form-actions">
             <button class="submit-btn" id="submitBtn" disabled>Log entry</button>
           </div>
         </div>

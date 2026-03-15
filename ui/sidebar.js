@@ -11,10 +11,10 @@ export function renderUserInfo(session) {
   if (!el) return;
   if (session.user) {
     el.textContent = session.user.name;
-    el.style.color = 'var(--green)';
+    el.className = 'user-info-authenticated';
   } else {
     el.textContent = 'Guest';
-    el.style.color = 'var(--text3)';
+    el.className = 'user-info-guest';
   }
 }
 
@@ -69,7 +69,7 @@ export function renderInstrumentList(instruments, selectedId, onSelect) {
 
     const labelPips = inst.labels.map(l => {
       const def = getLabelDef(l);
-      return def ? `<span class="label-tag ${def.cls}" style="font-size:8px;padding:1px 5px;">${def.label}</span>` : '';
+      return def ? `<span class="label-tag label-tag-sm ${def.cls}">${def.label}</span>` : '';
     }).join('');
 
     const displayReady = isDisplayReady(inst);
@@ -80,10 +80,10 @@ export function renderInstrumentList(instruments, selectedId, onSelect) {
       <div class="instrument-meta">
         <div class="status-dot s-${inst.status}"></div>
         <span class="status-label-small">${inst.status}</span>
-        ${displayReady ? '<span style="font-family:var(--mono);font-size:8px;color:var(--green);border:1px solid var(--green-dim);padding:1px 5px;border-radius:2px;text-transform:uppercase;letter-spacing:0.06em;">display ready</span>' : ''}
+        ${displayReady ? '<span class="display-ready-tag-sm">display ready</span>' : ''}
         <span class="entry-count">${inst.log.length}</span>
       </div>
-      ${inst.labels.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;">${labelPips}</div>` : ''}
+      ${inst.labels.length ? `<div class="label-pips">${labelPips}</div>` : ''}
     `;
     list.appendChild(div);
   });

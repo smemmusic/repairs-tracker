@@ -98,7 +98,7 @@ async function selectInstrument(id) {
 
   if (isGuest) {
     // Guests go straight to a locked fault_report form — no toggle needed
-    document.getElementById('addLogBtn').style.display = 'none';
+    document.getElementById('addLogBtn').classList.add('hidden');
     form.openForm();
     form.resetForm(raw);
     store.set('pendingLabels', {});
@@ -240,7 +240,7 @@ async function reInferLabels() {
   const suggestedStatus = inferStatusSuggestion(type, raw.status);
   if (suggestedStatus) {
     statusSelect.value = suggestedStatus;
-    form.showStatusHint('← inferred', 'var(--amber)');
+    form.showStatusHint('← inferred', 'inferred');
   }
 
   // Infer label suggestions based on effective status
@@ -261,9 +261,9 @@ async function onStatusChange() {
   if (selected !== raw.status) {
     const suggestedStatus = type ? inferStatusSuggestion(type, raw.status) : null;
     if (suggestedStatus && selected === suggestedStatus) {
-      form.showStatusHint('← inferred', 'var(--amber)');
+      form.showStatusHint('← inferred', 'inferred');
     } else {
-      form.showStatusHint('← manual override', 'var(--red)');
+      form.showStatusHint('← manual override', 'override');
     }
   } else {
     form.clearStatusHint();
@@ -322,7 +322,7 @@ async function startApp(session) {
   store.set('session', session);
 
   // Show the app
-  document.getElementById('app').style.display = '';
+  document.getElementById('app').classList.remove('hidden');
 
   // Render user info in sidebar
   renderUserInfo(session);
@@ -375,7 +375,7 @@ function resetAppState() {
   document.getElementById('entryCount').textContent = '—';
   document.getElementById('displayReadyBadge').innerHTML = '';
   document.getElementById('logEntries').innerHTML = '<div class="empty-state">← Select an instrument to view its log</div>';
-  document.getElementById('addLogBtn').style.display = 'none';
+  document.getElementById('addLogBtn').classList.add('hidden');
 
   // Reset form to clean state
   form.closeForm();
@@ -390,7 +390,7 @@ function resetAppState() {
 function handleLogout() {
   logout();
   resetAppState();
-  document.getElementById('app').style.display = 'none';
+  document.getElementById('app').classList.add('hidden');
   showLoginScreen(startApp);
 }
 

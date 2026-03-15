@@ -83,18 +83,5 @@ export function renderDisplayReadyBadge(instrument) {
   const el = document.getElementById('displayReadyBadge');
   if (!el) return;
   const ready = isDisplayReady(instrument);
-  el.innerHTML = `<span style="
-    font-family: var(--mono);
-    font-size: 10px;
-    padding: 4px 10px;
-    border: 1px solid ${ready ? 'var(--green)' : 'var(--red)'};
-    color: ${ready ? 'var(--green)' : 'var(--red)'};
-    background: ${ready ? 'rgba(74,158,110,0.08)' : 'rgba(158,74,74,0.08)'};
-    border-radius: 2px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    text-decoration: none;
-    opacity: ${ready ? '1' : '0.7'};
-    white-space: nowrap;
-  ">${ready ? '✓' : '✗'} Display ready</span>`;
+  el.innerHTML = `<span class="display-ready-badge ${ready ? 'pass' : 'fail'}">${ready ? '✓' : '✗'} Display ready</span>`;
 }

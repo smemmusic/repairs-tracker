@@ -32,7 +32,7 @@ export function renderLog(instrument, capabilities, onDelete) {
     }
 
     const scoreTag = (capabilities.viewScores && entry.score !== null)
-      ? `<span style="font-family:var(--mono);font-size:9px;color:var(--text3);border:1px solid var(--border2);padding:2px 6px;border-radius:2px;">${entry.score}/10</span>` : '';
+      ? `<span class="log-score-tag">${entry.score}/10</span>` : '';
 
     const statusTag = entry.status
       ? `<span class="status-change-tag tag-${entry.status}">→ ${entry.status}</span>` : '';
@@ -44,7 +44,7 @@ export function renderLog(instrument, capabilities, onDelete) {
       }),
       ...(entry.labels_removed || []).map(key => {
         const d = getLabelDef(key);
-        return d ? `<span class="log-label-tag" style="color:var(--text3);border-color:var(--border2);text-decoration:line-through;">− ${d.label}</span>` : '';
+        return d ? `<span class="log-label-tag removed">− ${d.label}</span>` : '';
       }),
     ].join('');
 

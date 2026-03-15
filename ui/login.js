@@ -36,7 +36,7 @@ export function showLoginScreen(onAuthenticated) {
     </div>
   `;
 
-  overlay.style.display = 'flex';
+  overlay.classList.add('visible');
 
   document.getElementById('loginBtn').addEventListener('click', async () => {
     const userId = document.getElementById('loginUser').value;
@@ -45,7 +45,7 @@ export function showLoginScreen(onAuthenticated) {
 
     try {
       const session = await login(userId, password);
-      overlay.style.display = 'none';
+      overlay.classList.remove('visible');
       onAuthenticated(session);
     } catch (e) {
       errorEl.textContent = e.message;
@@ -54,7 +54,7 @@ export function showLoginScreen(onAuthenticated) {
 
   document.getElementById('guestBtn').addEventListener('click', async () => {
     const session = await loginAsGuest();
-    overlay.style.display = 'none';
+    overlay.classList.remove('visible');
     onAuthenticated(session);
   });
 
