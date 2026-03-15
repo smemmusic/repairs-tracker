@@ -68,7 +68,7 @@ export function renderLog(instrument, capabilities, onEdit, onDelete) {
     div.className = 'log-entry';
     div.innerHTML = `
       <div>
-        <div class="log-date">${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}<br>${d.getFullYear()}</div>
+        <div class="log-date">${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
         <div class="log-author">${esc(authorName)}</div>
       </div>
       <div>
