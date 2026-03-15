@@ -36,9 +36,11 @@
         <div class="instrument-title" id="instrTitle">—</div>
         <div class="instrument-id" id="instrId">Select an instrument</div>
       </div>
-      <a href="#" class="airtable-link" onclick="return false;">↗ Airtable</a>
-      <div id="displayReadyBadge"></div>
-      <div class="status-badge tag-unknown" id="statusBadge">unknown</div>
+      <div class="header-badges">
+        <a href="#" class="airtable-link" onclick="return false;">↗ Airtable</a>
+        <div id="displayReadyBadge"></div>
+        <div class="status-badge tag-unknown" id="statusBadge">unknown</div>
+      </div>
     </div>
 
     <div class="info-strip" id="locationStrip">
@@ -64,12 +66,15 @@
         <span class="score-lbl">Log entries</span>
         <span class="score-val" id="entryCount">—</span>
       </div>
-      <button class="add-log-btn hidden" id="addLogBtn">+ New entry</button>
     </div>
 
     <div class="log-area" id="logArea">
       <div id="logEntries">
         <div class="empty-state">← Select an instrument to view its log</div>
+      </div>
+
+      <div class="add-log-bar hidden" id="addLogBar">
+        <button class="add-log-btn" id="addLogBtn">+ New entry</button>
       </div>
 
       <div class="add-entry-panel" id="addEntryPanel">

@@ -109,7 +109,7 @@ async function selectInstrument(id) {
 
   if (isGuest) {
     // Guests go straight to a locked fault_report form — no toggle needed
-    document.getElementById('addLogBtn').classList.add('hidden');
+    document.getElementById('addLogBar').classList.add('hidden');
     form.openForm();
     form.resetForm(raw);
     store.set('pendingLabels', {});
@@ -437,7 +437,7 @@ function resetAppState() {
   // Show empty state, hide main content
   document.getElementById('mainEmptyState').classList.remove('hidden');
   document.getElementById('mainContent').classList.remove('visible');
-  document.getElementById('addLogBtn').classList.add('hidden');
+  document.getElementById('addLogBar').classList.add('hidden');
   document.getElementById('app').classList.remove('instrument-selected');
   document.getElementById('backBtn').classList.add('hidden');
 

@@ -81,10 +81,9 @@ export function renderInstrumentList(instruments, selectedId, onSelect) {
       <div class="instrument-meta">
         <div class="status-dot s-${esc(inst.status)}"></div>
         <span class="status-label-small">${esc(inst.status)}</span>
-        ${displayReady ? '<span class="display-ready-tag-sm">display ready</span>' : ''}
         <span class="entry-count">${inst.log.length}</span>
       </div>
-      ${inst.labels.length ? `<div class="label-pips">${labelPips}</div>` : ''}
+      ${displayReady || inst.labels.length ? `<div class="label-pips">${displayReady ? '<span class="display-ready-tag-sm">display ready</span>' : ''}${labelPips}</div>` : ''}
     `;
     list.appendChild(div);
   });

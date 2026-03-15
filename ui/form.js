@@ -50,7 +50,7 @@ export function toggleForm() {
  * Show the add-log button (hidden until an instrument is selected).
  */
 export function showFormButton() {
-  document.getElementById('addLogBtn').classList.remove('hidden');
+  document.getElementById('addLogBar').classList.remove('hidden');
 }
 
 /**
