@@ -1,3 +1,5 @@
+export const APP_NAME = 'SMEM';
+
 export const DISPLAY_READY_THRESHOLD = 7;
 
 // Demo credentials — all seeded users share this password. Replaced by Drupal OAuth in production.

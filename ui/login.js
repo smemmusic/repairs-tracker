@@ -1,5 +1,6 @@
 import { getLoginUsers, login, loginAsGuest } from '../data/auth.js';
 import { resetAllData } from '../data/api.js';
+import { APP_NAME, DEMO_PASSWORD } from '../domain/constants.js';
 
 /**
  * Render and show the login overlay.
@@ -16,8 +17,8 @@ export function showLoginScreen(onAuthenticated) {
   overlay.innerHTML = `
     <div class="login-box">
       <div class="login-title">Repair Tracker</div>
-      <div class="login-subtitle">SMEM</div>
-      <div class="login-note">Demo mode — password is <strong>smem</strong> for all users.<br>All data is stored locally in your browser. Feel free to experiment.</div>
+      <div class="login-subtitle">${APP_NAME}</div>
+      <div class="login-note">Demo mode — password is <strong>${DEMO_PASSWORD}</strong> for all users.<br>All data is stored locally in your browser. Feel free to experiment.</div>
       <div class="login-form">
         <div class="login-field">
           <label class="login-label">User</label>
@@ -27,7 +28,7 @@ export function showLoginScreen(onAuthenticated) {
         </div>
         <div class="login-field">
           <label class="login-label">Password</label>
-          <input class="login-input" type="password" id="loginPassword" placeholder="smem">
+          <input class="login-input" type="password" id="loginPassword" placeholder="${DEMO_PASSWORD}">
         </div>
         <div id="loginError" class="login-error"></div>
         <button class="login-btn login-btn-primary" id="loginBtn">Log in</button>
