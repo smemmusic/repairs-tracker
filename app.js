@@ -83,6 +83,8 @@ async function selectInstrument(id) {
   // Show main content, hide empty state
   document.getElementById('mainEmptyState').classList.add('hidden');
   document.getElementById('mainContent').classList.add('visible');
+  document.getElementById('app').classList.add('instrument-selected');
+  document.getElementById('backBtn').classList.remove('hidden');
 
   const c = caps();
 
@@ -376,6 +378,15 @@ function removeStagedFile(index) {
   form.renderAttachPreview(stagedFiles, removeStagedFile);
 }
 
+function goBackToList() {
+  document.getElementById('app').classList.remove('instrument-selected');
+  document.getElementById('backBtn').classList.add('hidden');
+  document.getElementById('mainEmptyState').classList.remove('hidden');
+  document.getElementById('mainContent').classList.remove('visible');
+  store.set('selectedId', null);
+  refreshSidebar();
+}
+
 async function onFilterChange(filterKey) {
   store.set('activeFilter', filterKey);
   await refreshSidebar();
@@ -407,6 +418,7 @@ async function startApp(session) {
     document.getElementById('submitBtn').addEventListener('click', submitEntry);
     document.querySelector('.attach-btn').addEventListener('click', () => document.getElementById('entryFiles').click());
     document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+    document.getElementById('backBtn').addEventListener('click', goBackToList);
   }
 
   // Initial render
@@ -427,6 +439,8 @@ function resetAppState() {
   document.getElementById('mainEmptyState').classList.remove('hidden');
   document.getElementById('mainContent').classList.remove('visible');
   document.getElementById('addLogBtn').classList.add('hidden');
+  document.getElementById('app').classList.remove('instrument-selected');
+  document.getElementById('backBtn').classList.add('hidden');
 
   // Reset form to clean state
   form.closeForm();
