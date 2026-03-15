@@ -356,10 +356,40 @@ async function startApp(session) {
   document.getElementById('entryDate').value = new Date().toISOString().split('T')[0];
 }
 
-function handleLogout() {
-  logout();
+function resetAppState() {
   store.set('session', null);
   store.set('selectedId', null);
+  store.set('activeFilter', 'all');
+  store.set('pendingLabels', {});
+  store.set('stagedFiles', []);
+
+  // Reset detail panel to empty state
+  document.getElementById('instrTitle').textContent = '—';
+  document.getElementById('instrId').textContent = 'Select an instrument';
+  document.getElementById('statusBadge').textContent = 'unknown';
+  document.getElementById('statusBadge').className = 'status-badge tag-unknown';
+  document.getElementById('labelsStrip').innerHTML = '<span class="labels-empty">No active labels</span>';
+  document.getElementById('scoreBar').innerHTML = '';
+  document.getElementById('scoreValue').textContent = '—';
+  document.getElementById('lastEntry').textContent = '—';
+  document.getElementById('entryCount').textContent = '—';
+  document.getElementById('displayReadyBadge').innerHTML = '';
+  document.getElementById('logEntries').innerHTML = '<div class="empty-state">← Select an instrument to view its log</div>';
+  document.getElementById('addLogBtn').style.display = 'none';
+
+  // Reset form to clean state
+  form.closeForm();
+  document.getElementById('entryType').value = '';
+  document.getElementById('entryType').disabled = false;
+  document.getElementById('entryNewStatus').disabled = false;
+  document.getElementById('entryDate').disabled = false;
+  document.getElementById('entryNotes').value = '';
+  document.getElementById('attachPreview').innerHTML = '';
+}
+
+function handleLogout() {
+  logout();
+  resetAppState();
   document.getElementById('app').style.display = 'none';
   showLoginScreen(startApp);
 }
