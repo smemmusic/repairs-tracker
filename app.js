@@ -8,6 +8,7 @@ import { renderLog } from './ui/log.js';
 import * as form from './ui/form.js';
 import { showLoginScreen } from './ui/login.js';
 import { getSession, logout } from './data/auth.js';
+import { EntryType, LabelAction, Filter, isTerminalStatus } from './domain/constants.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -55,8 +56,8 @@ async function updateDisplayReadyPreview() {
   const pendingLabels = store.get('pendingLabels');
   const projectedLabels = [...raw.labels];
   Object.entries(pendingLabels).forEach(([key, action]) => {
-    if (action === 'add' && !projectedLabels.includes(key)) projectedLabels.push(key);
-    if (action === 'remove') {
+    if (action === LabelAction.ADD && !projectedLabels.includes(key)) projectedLabels.push(key);
+    if (action === LabelAction.REMOVE) {
       const i = projectedLabels.indexOf(key);
       if (i > -1) projectedLabels.splice(i, 1);
     }
@@ -116,7 +117,7 @@ async function selectInstrument(id) {
     form.renderAttachPreview([], removeStagedFile);
 
     // Pre-fill and trigger inference
-    document.getElementById('entryType').value = 'fault_report';
+    document.getElementById('entryType').value = EntryType.FAULT_REPORT;
     document.getElementById('submitBtn').disabled = false;
     await reInferLabels();
 
@@ -169,9 +170,9 @@ async function submitEntry() {
     // Collect label deltas from pending
     const pendingLabels = store.get('pendingLabels');
     const labelsAdded = Object.entries(pendingLabels)
-      .filter(([, v]) => v === 'add').map(([k]) => k);
+      .filter(([, v]) => v === LabelAction.ADD).map(([k]) => k);
     const labelsRemoved = Object.entries(pendingLabels)
-      .filter(([, v]) => v === 'remove').map(([k]) => k);
+      .filter(([, v]) => v === LabelAction.REMOVE).map(([k]) => k);
 
     try {
       await api.editLogEntry(id, editingId, {
@@ -190,7 +191,7 @@ async function submitEntry() {
     showToast('Log entry updated');
   } else {
     // Create mode — add new entry
-    const terminal = raw.status === 'retired' || raw.status === 'disposed';
+    const terminal = isTerminalStatus(raw.status);
     const effectiveStatus = (!terminal && values.status && values.status !== raw.status)
       ? values.status : null;
     const currentScore = getScore(raw);
@@ -201,8 +202,8 @@ async function submitEntry() {
     const labelsAdded = [];
     const labelsRemoved = [];
     Object.entries(pendingLabels).forEach(([key, action]) => {
-      if (action === 'add' && !raw.labels.includes(key)) labelsAdded.push(key);
-      if (action === 'remove') labelsRemoved.push(key);
+      if (action === LabelAction.ADD && !raw.labels.includes(key)) labelsAdded.push(key);
+      if (action === LabelAction.REMOVE) labelsRemoved.push(key);
     });
 
     try {
@@ -257,8 +258,8 @@ async function onEditLogEntry(logEntryId) {
 
   // Pre-fill pending labels from the entry's deltas
   const pending = {};
-  for (const key of (entry.labels_added || [])) pending[key] = 'add';
-  for (const key of (entry.labels_removed || [])) pending[key] = 'remove';
+  for (const key of (entry.labels_added || [])) pending[key] = LabelAction.ADD;
+  for (const key of (entry.labels_removed || [])) pending[key] = LabelAction.REMOVE;
   store.set('pendingLabels', pending);
   form.renderLabelsEditRow(pending, onLabelToggle);
 
@@ -306,7 +307,7 @@ async function reInferLabels() {
   const suggestedStatus = inferStatusSuggestion(type, raw.status);
   if (suggestedStatus) {
     statusSelect.value = suggestedStatus;
-    form.showStatusHint('← inferred', 'inferred');
+    form.showStatusHint('\u2190 inferred', 'inferred');
   }
 
   // Infer label suggestions based on effective status
@@ -327,9 +328,9 @@ async function onStatusChange() {
   if (selected !== raw.status) {
     const suggestedStatus = type ? inferStatusSuggestion(type, raw.status) : null;
     if (suggestedStatus && selected === suggestedStatus) {
-      form.showStatusHint('← inferred', 'inferred');
+      form.showStatusHint('\u2190 inferred', 'inferred');
     } else {
-      form.showStatusHint('← manual override', 'override');
+      form.showStatusHint('\u2190 manual override', 'override');
     }
   } else {
     form.clearStatusHint();
@@ -345,7 +346,7 @@ async function onStatusChange() {
 
 async function onLabelToggle(key, action) {
   const pendingLabels = { ...store.get('pendingLabels') };
-  if (action === 'cancel') {
+  if (action === LabelAction.CANCEL) {
     delete pendingLabels[key];
   } else {
     pendingLabels[key] = action;
@@ -439,7 +440,7 @@ async function startApp(session) {
 function resetAppState() {
   store.set('session', null);
   store.set('selectedId', null);
-  store.set('activeFilter', 'all');
+  store.set('activeFilter', Filter.ALL);
   store.set('pendingLabels', {});
   store.set('stagedFiles', []);
   store.set('editingEntryId', null);

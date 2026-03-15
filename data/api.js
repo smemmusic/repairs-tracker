@@ -2,9 +2,10 @@ import { instruments as seedData, contributors } from './seed.js';
 import { getScore, isDisplayReady } from '../domain/computed.js';
 import { getSession } from './auth.js';
 import { inferStatusSuggestion, inferLabelSuggestions } from '../domain/inference.js';
+import { STORAGE_KEY_INSTRUMENTS, Status, EntryType, LabelAction, Filter, isTerminalStatus } from '../domain/constants.js';
+import { createLogEntry } from '../domain/models.js';
 
 // In-memory store backed by localStorage — will be replaced by fetch() calls to FastAPI
-import { STORAGE_KEY_INSTRUMENTS } from '../domain/constants.js';
 
 function loadInstruments() {
   try {
@@ -52,12 +53,12 @@ export function getContributorName(contributorId) {
 /**
  * List instruments, optionally filtered by status or display readiness, and searched by name/serial.
  */
-export async function listInstruments(filter = 'all', search = '') {
+export async function listInstruments(filter = Filter.ALL, search = '') {
   let results = instruments;
 
-  if (filter === 'display_ready') {
+  if (filter === Filter.DISPLAY_READY) {
     results = results.filter(inst => isDisplayReady(inst));
-  } else if (filter !== 'all') {
+  } else if (filter !== Filter.ALL) {
     results = results.filter(inst => inst.status === filter);
   }
 
@@ -108,7 +109,7 @@ export async function addLogEntry(instrumentId, entry) {
   const caps = session?.capabilities || {};
 
   // Permission enforcement
-  const isFaultReport = entry.type === 'fault_report';
+  const isFaultReport = entry.type === EntryType.FAULT_REPORT;
   if (isFaultReport && !caps.submitFaultReport) {
     throw new Error('Permission denied: cannot submit fault reports');
   }
@@ -126,22 +127,22 @@ export async function addLogEntry(instrumentId, entry) {
 
   // For fault reports from guests, override client-sent status/labels with server-inferred values
   if (isFaultReport && (!caps.setStatus || !caps.setLabels)) {
-    const suggestedStatus = inferStatusSuggestion('fault_report', inst.status);
-    const suggestedLabels = inferLabelSuggestions('fault_report', suggestedStatus || inst.status, inst.labels);
+    const suggestedStatus = inferStatusSuggestion(EntryType.FAULT_REPORT, inst.status);
+    const suggestedLabels = inferLabelSuggestions(EntryType.FAULT_REPORT, suggestedStatus || inst.status, inst.labels);
 
     if (!caps.setStatus) {
       entry.status = suggestedStatus;
     }
     if (!caps.setLabels) {
       entry.labelsAdded = Object.entries(suggestedLabels)
-        .filter(([, v]) => v === 'add').map(([k]) => k);
+        .filter(([, v]) => v === LabelAction.ADD).map(([k]) => k);
       entry.labelsRemoved = Object.entries(suggestedLabels)
-        .filter(([, v]) => v === 'remove').map(([k]) => k);
+        .filter(([, v]) => v === LabelAction.REMOVE).map(([k]) => k);
     }
   }
   if (!inst) throw new Error(`Instrument not found: ${instrumentId}`);
 
-  const terminal = inst.status === 'retired' || inst.status === 'disposed';
+  const terminal = isTerminalStatus(inst.status);
 
   // Determine effective status change
   const effectiveStatus = (!terminal && entry.status && entry.status !== inst.status)
@@ -179,8 +180,7 @@ export async function addLogEntry(instrumentId, entry) {
   // Resolve contributor from session — null means unauthenticated visitor
   const contributorId = session?.user?.id || null;
 
-  const logEntry = {
-    id: 'l' + Date.now(),
+  const logEntry = createLogEntry({
     type: entry.type,
     date: entry.date || new Date().toISOString().split('T')[0],
     contributor_id: contributorId,
@@ -191,7 +191,7 @@ export async function addLogEntry(instrumentId, entry) {
     labels_added: labelsAdded,
     labels_removed: labelsRemoved,
     attachments: entry.attachments || [],
-  };
+  });
 
   inst.log.push(logEntry);
   persist();
@@ -203,7 +203,7 @@ export async function addLogEntry(instrumentId, entry) {
  * Recompute instrument status and labels from its log entries.
  */
 function recomputeState(inst) {
-  let status = 'unknown';
+  let status = Status.UNKNOWN;
   for (const entry of inst.log) {
     if (entry.status) status = entry.status;
   }
@@ -270,4 +270,3 @@ export async function deleteLogEntry(instrumentId, logEntryId) {
   persist();
   return inst;
 }
-

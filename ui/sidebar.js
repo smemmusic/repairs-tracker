@@ -1,4 +1,4 @@
-import { STATUSES } from '../domain/constants.js';
+import { STATUSES, Filter } from '../domain/constants.js';
 import { getLabelDef } from '../domain/constants.js';
 import { isDisplayReady } from '../domain/computed.js';
 
@@ -29,7 +29,7 @@ export function renderFilters(onFilter) {
   const allBtn = document.createElement('button');
   allBtn.className = 'filter-chip active';
   allBtn.textContent = 'All';
-  allBtn.onclick = function () { setActiveChip(this); onFilter('all'); };
+  allBtn.onclick = function () { setActiveChip(this); onFilter(Filter.ALL); };
   container.appendChild(allBtn);
 
   STATUSES.forEach(s => {
@@ -43,7 +43,7 @@ export function renderFilters(onFilter) {
   const dr = document.createElement('button');
   dr.className = 'filter-chip';
   dr.textContent = 'Display ready';
-  dr.onclick = function () { setActiveChip(this); onFilter('display_ready'); };
+  dr.onclick = function () { setActiveChip(this); onFilter(Filter.DISPLAY_READY); };
   container.appendChild(dr);
 }
 

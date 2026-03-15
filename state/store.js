@@ -1,8 +1,10 @@
+import { Filter } from '../domain/constants.js';
+
 const state = {
   session: null,       // { user, capabilities } from auth
   selectedId: null,
-  activeFilter: 'all',
-  pendingLabels: {},   // map of label key → 'add' | 'remove'
+  activeFilter: Filter.ALL,
+  pendingLabels: {},   // map of label key → LabelAction
   stagedFiles: [],     // array of { name, type, url }
   drafts: {},          // map of instrument id → draft object
   editingEntryId: null, // log entry ID being edited, or null

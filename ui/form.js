@@ -1,4 +1,4 @@
-import { LABELS } from '../domain/constants.js';
+import { LABELS, EntryType, LabelAction, isTerminalStatus } from '../domain/constants.js';
 import { getScore, getDisplayReadyChecks } from '../domain/computed.js';
 import { displayReadyBadgeHTML } from './shared.js';
 
@@ -7,7 +7,7 @@ import { displayReadyBadgeHTML } from './shared.js';
  */
 export function openForm() {
   document.getElementById('addEntryPanel').classList.add('open');
-  document.getElementById('addLogBtn').textContent = '← View log';
+  document.getElementById('addLogBtn').textContent = '\u2190 View log';
 }
 
 /**
@@ -84,7 +84,7 @@ export function applyCapabilities(capabilities) {
   typeSelect.disabled = isGuest;
   if (isGuest) {
     Array.from(typeSelect.options).forEach(opt => {
-      if (opt.value && opt.value !== 'fault_report') {
+      if (opt.value && opt.value !== EntryType.FAULT_REPORT) {
         opt.disabled = true;
         opt.classList.add('hidden');
       }
@@ -139,7 +139,7 @@ export function resetForm(instrument) {
   });
   clearStatusHint();
 
-  const terminal = instrument.status === 'retired' || instrument.status === 'disposed';
+  const terminal = isTerminalStatus(instrument.status);
   const statusSelect = document.getElementById('entryNewStatus');
   statusSelect.disabled = terminal;
   statusSelect.classList.toggle('terminal', terminal);
@@ -149,7 +149,7 @@ export function resetForm(instrument) {
  * Configure the status select for terminal states.
  */
 export function configureStatusSelect(instrument) {
-  const terminal = instrument.status === 'retired' || instrument.status === 'disposed';
+  const terminal = isTerminalStatus(instrument.status);
   const statusSelect = document.getElementById('entryNewStatus');
   statusSelect.disabled = terminal;
   statusSelect.classList.toggle('terminal', terminal);
@@ -185,7 +185,7 @@ export function flashNotesError() {
 /**
  * Render label toggle buttons in the form.
  * @param {Object} instrument - current instrument
- * @param {Object} pendingLabels - map of key → 'add'|'remove'
+ * @param {Object} pendingLabels - map of key → LabelAction
  * @param {Function|null} onToggle - callback(key, action), or null for read-only display
  */
 export function renderLabelsFormRow(instrument, pendingLabels, onToggle) {
@@ -205,32 +205,32 @@ export function renderLabelsFormRow(instrument, pendingLabels, onToggle) {
     btn.className = `label-toggle ${cls}`;
     if (readOnly) btn.classList.add('readonly');
 
-    if (onInstrument && pending !== 'remove') {
+    if (onInstrument && pending !== LabelAction.REMOVE) {
       btn.classList.add('active');
       btn.textContent = label;
       if (!readOnly) {
         btn.title = 'Click to remove this label';
-        btn.onclick = () => onToggle(key, 'remove');
+        btn.onclick = () => onToggle(key, LabelAction.REMOVE);
       }
-    } else if (pending === 'remove') {
+    } else if (pending === LabelAction.REMOVE) {
       btn.classList.add('active', 'remove');
       btn.textContent = label;
       if (!readOnly) {
         btn.title = 'Click to keep this label';
-        btn.onclick = () => onToggle(key, 'cancel');
+        btn.onclick = () => onToggle(key, LabelAction.CANCEL);
       }
-    } else if (pending === 'add') {
+    } else if (pending === LabelAction.ADD) {
       btn.classList.add('active', 'add');
       btn.textContent = label;
       if (!readOnly) {
         btn.title = 'Suggested — click to cancel';
-        btn.onclick = () => onToggle(key, 'cancel');
+        btn.onclick = () => onToggle(key, LabelAction.CANCEL);
       }
     } else {
       btn.textContent = label;
       if (!readOnly) {
         btn.title = 'Click to add this label';
-        btn.onclick = () => onToggle(key, 'add');
+        btn.onclick = () => onToggle(key, LabelAction.ADD);
       }
     }
 
@@ -240,7 +240,7 @@ export function renderLabelsFormRow(instrument, pendingLabels, onToggle) {
 
 /**
  * Render label editor for edit mode — shows raw deltas (what this entry adds/removes).
- * @param {Object} pendingLabels - map of key → 'add'|'remove'
+ * @param {Object} pendingLabels - map of key → LabelAction
  * @param {Function} onToggle - callback(key, action)
  */
 export function renderLabelsEditRow(pendingLabels, onToggle) {
@@ -254,7 +254,7 @@ export function renderLabelsEditRow(pendingLabels, onToggle) {
   row.appendChild(addedLabel);
 
   LABELS.forEach(({ key, label, cls }) => {
-    const isAdded = pendingLabels[key] === 'add';
+    const isAdded = pendingLabels[key] === LabelAction.ADD;
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = `label-toggle ${cls}`;
@@ -262,11 +262,11 @@ export function renderLabelsEditRow(pendingLabels, onToggle) {
       btn.classList.add('active', 'add');
       btn.textContent = label;
       btn.title = 'Click to remove from this entry';
-      btn.onclick = () => onToggle(key, 'cancel');
+      btn.onclick = () => onToggle(key, LabelAction.CANCEL);
     } else {
       btn.textContent = label;
       btn.title = 'Click to add to this entry';
-      btn.onclick = () => onToggle(key, 'add');
+      btn.onclick = () => onToggle(key, LabelAction.ADD);
     }
     row.appendChild(btn);
   });
@@ -279,7 +279,7 @@ export function renderLabelsEditRow(pendingLabels, onToggle) {
   row.appendChild(sep);
 
   LABELS.forEach(({ key, label, cls }) => {
-    const isRemoved = pendingLabels[key] === 'remove';
+    const isRemoved = pendingLabels[key] === LabelAction.REMOVE;
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = `label-toggle ${cls}`;
@@ -287,11 +287,11 @@ export function renderLabelsEditRow(pendingLabels, onToggle) {
       btn.classList.add('active', 'remove');
       btn.textContent = label;
       btn.title = 'Click to keep on this entry';
-      btn.onclick = () => onToggle(key, 'cancel');
+      btn.onclick = () => onToggle(key, LabelAction.CANCEL);
     } else {
       btn.textContent = label;
       btn.title = 'Click to remove via this entry';
-      btn.onclick = () => onToggle(key, 'remove');
+      btn.onclick = () => onToggle(key, LabelAction.REMOVE);
     }
     row.appendChild(btn);
   });

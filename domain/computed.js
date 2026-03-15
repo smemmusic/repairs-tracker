@@ -1,4 +1,4 @@
-import { DISPLAY_READY_THRESHOLD } from './constants.js';
+import { DISPLAY_READY_THRESHOLD, Status } from './constants.js';
 
 /**
  * Returns the most recent condition score from an instrument's log, or null.
@@ -14,7 +14,7 @@ export function getScore(instrument) {
 export function isDisplayReady(instrument) {
   const score = getScore(instrument);
   return (
-    instrument.status === 'working'
+    instrument.status === Status.WORKING
     && instrument.labels.length === 0
     && score !== null
     && score >= DISPLAY_READY_THRESHOLD
@@ -37,9 +37,8 @@ export function getLocation(instrument) {
  */
 export function getDisplayReadyChecks(status, labels, score) {
   return [
-    { label: 'Status: working', pass: status === 'working' },
+    { label: 'Status: working', pass: status === Status.WORKING },
     { label: 'No active labels', pass: labels.length === 0 },
     { label: `Score \u2265 ${DISPLAY_READY_THRESHOLD}`, pass: score !== null && score >= DISPLAY_READY_THRESHOLD },
   ];
 }
-

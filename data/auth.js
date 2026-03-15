@@ -1,8 +1,8 @@
 import { contributors } from './seed.js';
-
 import { DEMO_PASSWORD, STORAGE_KEY_SESSION } from '../domain/constants.js';
+import { createSession, createCapabilities } from '../domain/models.js';
 
-const AUTHENTICATED_CAPABILITIES = {
+const AUTHENTICATED_CAPABILITIES = createCapabilities({
   viewLogHistory: true,
   viewScores: true,
   submitFaultReport: true,
@@ -11,18 +11,11 @@ const AUTHENTICATED_CAPABILITIES = {
   setLabels: true,
   editLogEntry: true,
   deleteLogEntry: true,
-};
+});
 
-const GUEST_CAPABILITIES = {
-  viewLogHistory: false,
-  viewScores: false,
+const GUEST_CAPABILITIES = createCapabilities({
   submitFaultReport: true,
-  submitOtherEntryTypes: false,
-  setStatus: false,
-  setLabels: false,
-  editLogEntry: false,
-  deleteLogEntry: false,
-};
+});
 
 let currentSession = null;
 
@@ -48,10 +41,10 @@ export async function login(userId, password) {
     throw new Error('User not found');
   }
 
-  currentSession = {
-    user: { id: contributor.id, name: contributor.name },
-    capabilities: { ...AUTHENTICATED_CAPABILITIES },
-  };
+  currentSession = createSession(
+    { id: contributor.id, name: contributor.name },
+    { ...AUTHENTICATED_CAPABILITIES },
+  );
 
   persistSession();
   return currentSession;
@@ -62,10 +55,7 @@ export async function login(userId, password) {
  * Returns { user: null, capabilities } with limited permissions.
  */
 export async function loginAsGuest() {
-  currentSession = {
-    user: null,
-    capabilities: { ...GUEST_CAPABILITIES },
-  };
+  currentSession = createSession(null, { ...GUEST_CAPABILITIES });
 
   persistSession();
   return currentSession;
