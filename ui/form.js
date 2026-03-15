@@ -87,11 +87,11 @@ export function applyCapabilities(capabilities) {
   const dateInput = document.getElementById('entryDate');
   if (dateInput) dateInput.disabled = isGuest;
 
-  // Score: hidden for guests
-  if (scoreGroup) scoreGroup.classList.toggle('hidden', !capabilities.viewScores);
-
-  // Display-ready, contributor: hidden for guests
-  if (displayReadyGroup) displayReadyGroup.classList.toggle('hidden', !capabilities.viewScores);
+  // Score, labels, display-ready: hidden for guests
+  const labelsGroup = document.getElementById('labelsFormGroup');
+  if (scoreGroup) scoreGroup.classList.toggle('hidden', isGuest);
+  if (labelsGroup) labelsGroup.classList.toggle('hidden', isGuest);
+  if (displayReadyGroup) displayReadyGroup.classList.toggle('hidden', isGuest);
 }
 
 /**
