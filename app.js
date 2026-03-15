@@ -6,7 +6,6 @@ import { renderFilters, renderInstrumentList } from './ui/sidebar.js';
 import { renderDetailHeader, renderLabelsStrip, renderScoreStrip, renderDisplayReadyBadge } from './ui/detail.js';
 import { renderLog } from './ui/log.js';
 import * as form from './ui/form.js';
-import { openStatusModal, closeStatusModal } from './ui/modal.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -143,28 +142,6 @@ async function addEntry() {
   await selectInstrument(id);
 }
 
-async function applyStatus(statusKey) {
-  const id = store.get('selectedId');
-  if (!id) return;
-  const inst = await api.getInstrument(id);
-  if (statusKey === inst.status) {
-    closeStatusModal();
-    return;
-  }
-
-  await api.addLogEntry(id, {
-    type: 'other',
-    notes: `Status set to "${statusKey}".`,
-    status: statusKey,
-    score: null,
-    labelsAdded: [],
-    labelsRemoved: [],
-  });
-
-  closeStatusModal();
-  await selectInstrument(id);
-}
-
 // ── Form Event Handlers ──────────────────────────────────────────────
 
 async function reInferLabels() {
@@ -269,21 +246,11 @@ async function onFilterChange(filterKey) {
   await refreshSidebar();
 }
 
-async function onOpenStatusModal() {
-  const id = store.get('selectedId');
-  if (!id) return;
-  const inst = await api.getInstrument(id);
-  openStatusModal(inst, applyStatus);
-}
-
 // ── Boot ─────────────────────────────────────────────────────────────
 
 // Wire up event listeners
 document.getElementById('searchInput').addEventListener('input', refreshSidebar);
 document.getElementById('addLogBtn').addEventListener('click', () => form.toggleForm());
-document.getElementById('statusBadge').addEventListener('click', onOpenStatusModal);
-document.getElementById('statusModal').addEventListener('click', (e) => closeStatusModal(e));
-document.querySelector('#statusModal .modal-close').addEventListener('click', () => closeStatusModal());
 document.getElementById('entryType').addEventListener('change', reInferLabels);
 document.getElementById('entryNewStatus').addEventListener('change', onStatusChange);
 document.getElementById('entryScore').addEventListener('change', updateDisplayReadyPreview);

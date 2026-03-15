@@ -60,8 +60,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 .main-title-block { flex: 1; }
 .instrument-title { font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
 .instrument-id { font-family: var(--mono); font-size: 10px; color: var(--text3); letter-spacing: 0.08em; }
-.status-badge { font-family: var(--mono); font-size: 10px; padding: 4px 10px; border: 1px solid; border-radius: 2px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: opacity 0.15s; white-space: nowrap; }
-.status-badge:hover { opacity: 0.75; }
+.status-badge { font-family: var(--mono); font-size: 10px; padding: 4px 10px; border: 1px solid; border-radius: 2px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
 .airtable-link { font-family: var(--mono); font-size: 10px; color: var(--text3); text-decoration: none; border: 1px solid var(--border2); padding: 4px 10px; border-radius: 2px; transition: all 0.12s; white-space: nowrap; }
 .airtable-link:hover { border-color: var(--amber-dim); color: var(--amber); }
 
@@ -127,18 +126,6 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 .submit-btn { background: var(--amber); color: var(--bg); border: none; font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 8px 16px; cursor: pointer; border-radius: 2px; letter-spacing: 0.06em; text-transform: uppercase; transition: opacity 0.15s; white-space: nowrap; height: 34px; align-self: end; }
 .submit-btn:hover { opacity: 0.85; }
 .submit-btn:disabled { opacity: 0.25; cursor: not-allowed; }
-
-/* Modal */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
-.modal-overlay.open { opacity: 1; pointer-events: all; }
-.modal { background: var(--bg2); border: 1px solid var(--border2); border-radius: 3px; padding: 20px; width: 340px; transform: translateY(8px); transition: transform 0.15s; }
-.modal-overlay.open .modal { transform: translateY(0); }
-.modal-title { font-family: var(--mono); font-size: 11px; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px; }
-.status-option { display: flex; align-items: center; gap: 10px; padding: 9px 12px; cursor: pointer; border-radius: 2px; transition: background 0.1s; margin-bottom: 3px; }
-.status-option:hover { background: var(--bg3); }
-.status-option-label { font-family: var(--mono); font-size: 12px; color: var(--text); }
-.modal-close { margin-top: 14px; font-family: var(--mono); font-size: 10px; color: var(--text3); background: none; border: none; cursor: pointer; letter-spacing: 0.06em; padding: 0; }
-.modal-close:hover { color: var(--text); }
 
 /* Label toggle buttons in form */
 .label-toggle {
