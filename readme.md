@@ -1,4 +1,18 @@
-# Synthesiser Museum — Repair Tracker: Backend Specification
+# SMEM — Repair Tracker
+
+## Running the prototype
+
+```
+git clone <repo-url>
+cd smem-repairs
+python -m http.server
+```
+
+Then open http://localhost:8000
+
+---
+
+# Backend Specification
 
 ## 1. Overview
 
