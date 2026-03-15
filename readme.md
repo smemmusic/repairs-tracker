@@ -152,7 +152,7 @@ unknown | broken | working | retired | disposed
 
 #### `label_key`
 ```
-needs_repair | needs_investigation | needs_cleaning
+needs_repair | needs_investigation | needs_cleaning | needs_parts
 ```
 
 
@@ -262,6 +262,7 @@ Labels represent outstanding actions or attention signals. Multiple labels can b
 | `needs_repair` | Known functional issue requiring repair work. |
 | `needs_investigation` | Something has been reported but the cause is unknown. |
 | `needs_cleaning` | Physical cleaning required. |
+| `needs_parts` | Parts need to be sourced before work can continue. |
 
 ### Label inference rules
 

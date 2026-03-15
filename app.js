@@ -97,9 +97,12 @@ async function selectInstrument(id) {
   renderScoreStrip(inst, c, raw);
   renderLog(inst, c, c.editLogEntry ? onEditLogEntry : null, c.deleteLogEntry ? onDeleteLogEntry : null);
 
-  // Form setup
+  // Form setup — clear any edit mode
+  store.set('editingEntryId', null);
+  form.setEditMode(false);
   form.configureStatusSelect(raw);
   form.clearStatusHint();
+  document.getElementById('entryType').disabled = false;
 
   const isGuest = !c.submitOtherEntryTypes;
 
@@ -410,7 +413,13 @@ async function startApp(session) {
   if (!startApp._wired) {
     startApp._wired = true;
     document.getElementById('searchInput').addEventListener('input', refreshSidebar);
-    document.getElementById('addLogBtn').addEventListener('click', () => form.toggleForm());
+    document.getElementById('addLogBtn').addEventListener('click', () => {
+      if (store.get('editingEntryId')) {
+        store.set('editingEntryId', null);
+        document.getElementById('entryType').disabled = false;
+      }
+      form.toggleForm();
+    });
     document.getElementById('entryType').addEventListener('change', reInferLabels);
     document.getElementById('entryNewStatus').addEventListener('change', onStatusChange);
     document.getElementById('entryScore').addEventListener('change', updateDisplayReadyPreview);

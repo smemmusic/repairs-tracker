@@ -63,6 +63,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 .label-needs_repair        { color: var(--amber); border-color: var(--amber-dim); background: var(--amber-glow); }
 .label-needs_investigation { color: var(--pink);  border-color: var(--pink-dim);  background: rgba(192,96,144,0.08); }
 .label-needs_cleaning      { color: var(--blue);  border-color: var(--blue);      background: rgba(74,122,158,0.08); }
+.label-needs_parts         { color: #c45a3a;      border-color: #8a3a22;          background: rgba(196,90,58,0.08); }
 
 /* Main */
 .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); position: relative; }

@@ -19,6 +19,7 @@ export const LABELS = [
   { key: 'needs_repair',        label: 'Needs repair',        cls: 'label-needs_repair' },
   { key: 'needs_investigation', label: 'Needs investigation', cls: 'label-needs_investigation' },
   { key: 'needs_cleaning',      label: 'Needs cleaning',      cls: 'label-needs_cleaning' },
+  { key: 'needs_parts',         label: 'Needs parts',         cls: 'label-needs_parts' },
 ];
 
 export function getLabelDef(key) {
