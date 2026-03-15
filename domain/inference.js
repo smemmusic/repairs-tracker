@@ -14,46 +14,35 @@ export function inferStatusSuggestion(entryType, currentStatus) {
 }
 
 /**
+ * Each rule: when entryType + effectiveStatus match, suggest an action for a label.
+ * A null entryType means the rule applies regardless of entry type.
+ */
+const LABEL_RULES = [
+  { entryType: null,                    status: Status.BROKEN,  label: Label.NEEDS_REPAIR,        action: LabelAction.ADD },
+  { entryType: EntryType.FAULT_REPORT,  status: null,           label: Label.NEEDS_INVESTIGATION, action: LabelAction.ADD },
+  { entryType: EntryType.ASSESSMENT,    status: Status.WORKING, label: Label.NEEDS_REPAIR,        action: LabelAction.REMOVE },
+  { entryType: EntryType.REPAIR,        status: Status.WORKING, label: Label.NEEDS_REPAIR,        action: LabelAction.REMOVE },
+  { entryType: EntryType.REPAIR,        status: Status.WORKING, label: Label.NEEDS_INVESTIGATION, action: LabelAction.REMOVE },
+  { entryType: EntryType.CLEANING,      status: null,           label: Label.NEEDS_CLEANING,      action: LabelAction.REMOVE },
+];
+
+/**
  * Suggests label additions/removals based on entry type, effective status,
  * and currently active labels.
  *
  * Returns an object mapping label keys to LabelAction.ADD or LabelAction.REMOVE.
- * e.g. { needs_repair: 'add', needs_investigation: 'add' }
  */
 export function inferLabelSuggestions(entryType, effectiveStatus, currentLabels) {
   const suggestions = {};
+  const has = (l) => currentLabels.includes(l);
 
-  // Global rule: broken status always implies needs_repair
-  if (effectiveStatus === Status.BROKEN && !currentLabels.includes(Label.NEEDS_REPAIR)) {
-    suggestions[Label.NEEDS_REPAIR] = LabelAction.ADD;
-  }
+  for (const rule of LABEL_RULES) {
+    if (rule.entryType && rule.entryType !== entryType) continue;
+    if (rule.status && rule.status !== effectiveStatus) continue;
 
-  if (entryType === EntryType.FAULT_REPORT) {
-    if (!currentLabels.includes(Label.NEEDS_INVESTIGATION)) {
-      suggestions[Label.NEEDS_INVESTIGATION] = LabelAction.ADD;
-    }
-  }
-
-  if (entryType === EntryType.ASSESSMENT) {
-    if (effectiveStatus === Status.WORKING && currentLabels.includes(Label.NEEDS_REPAIR)) {
-      suggestions[Label.NEEDS_REPAIR] = LabelAction.REMOVE;
-    }
-  }
-
-  if (entryType === EntryType.REPAIR) {
-    if (effectiveStatus === Status.WORKING) {
-      if (currentLabels.includes(Label.NEEDS_REPAIR)) {
-        suggestions[Label.NEEDS_REPAIR] = LabelAction.REMOVE;
-      }
-      if (currentLabels.includes(Label.NEEDS_INVESTIGATION)) {
-        suggestions[Label.NEEDS_INVESTIGATION] = LabelAction.REMOVE;
-      }
-    }
-  }
-
-  if (entryType === EntryType.CLEANING) {
-    if (currentLabels.includes(Label.NEEDS_CLEANING)) {
-      suggestions[Label.NEEDS_CLEANING] = LabelAction.REMOVE;
+    const shouldSuggest = rule.action === LabelAction.ADD ? !has(rule.label) : has(rule.label);
+    if (shouldSuggest) {
+      suggestions[rule.label] = rule.action;
     }
   }
 
