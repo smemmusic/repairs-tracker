@@ -14,7 +14,7 @@ export function renderDetailHeader(instrument) {
 
   const badge = document.getElementById('statusBadge');
   badge.textContent = instrument.status;
-  badge.className = `status-badge tag-${esc(instrument.status)}`;
+  badge.className = `status-badge tag tag-md tag-${esc(instrument.status)}`;
 }
 
 /**

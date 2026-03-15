@@ -22,13 +22,13 @@ export function showLoginScreen(onAuthenticated) {
       <div class="login-form">
         <div class="login-field">
           <label class="login-label">User</label>
-          <select class="login-select" id="loginUser">
+          <select class="login-select input" id="loginUser">
             ${userOptions}
           </select>
         </div>
         <div class="login-field">
           <label class="login-label">Password</label>
-          <input class="login-input" type="password" id="loginPassword" placeholder="${DEMO_PASSWORD}">
+          <input class="login-input input" type="password" id="loginPassword" placeholder="${DEMO_PASSWORD}">
         </div>
         <div id="loginError" class="login-error"></div>
         <button class="login-btn login-btn-primary" id="loginBtn">Log in</button>
@@ -36,7 +36,7 @@ export function showLoginScreen(onAuthenticated) {
         <button class="login-btn login-btn-guest" id="guestBtn">Continue without login</button>
       </div>
       <div class="login-reset">
-        <button class="login-reset-btn" id="resetBtn">Reset demo data</button>
+        <button class="login-reset-btn btn-subtle" id="resetBtn">Reset demo data</button>
         <span class="login-reset-hint">Clears all changes and restores seed data</span>
       </div>
     </div>

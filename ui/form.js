@@ -6,6 +6,7 @@ import { displayReadyBadgeHTML, esc } from './shared.js';
  * Open the entry form panel and update button text.
  */
 export function openForm() {
+  document.getElementById('logEntries').classList.add('hidden');
   document.getElementById('addEntryPanel').classList.add('open');
   document.getElementById('addLogBtn').textContent = '\u2190 View log';
 }
@@ -15,6 +16,7 @@ export function openForm() {
  */
 export function closeForm() {
   document.getElementById('addEntryPanel').classList.remove('open');
+  document.getElementById('logEntries').classList.remove('hidden');
   document.getElementById('addLogBtn').textContent = '+ New entry';
   setEditMode(false);
 }

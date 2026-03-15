@@ -28,21 +28,21 @@ export function renderFilters(onFilter) {
   container.innerHTML = '';
 
   const allBtn = document.createElement('button');
-  allBtn.className = 'filter-chip active';
+  allBtn.className = 'filter-chip btn-subtle active';
   allBtn.textContent = 'All';
   allBtn.onclick = function () { setActiveChip(this); onFilter(Filter.ALL); };
   container.appendChild(allBtn);
 
   STATUSES.forEach(s => {
     const btn = document.createElement('button');
-    btn.className = 'filter-chip';
+    btn.className = 'filter-chip btn-subtle';
     btn.textContent = s.label;
     btn.onclick = function () { setActiveChip(this); onFilter(s.key); };
     container.appendChild(btn);
   });
 
   const dr = document.createElement('button');
-  dr.className = 'filter-chip';
+  dr.className = 'filter-chip btn-subtle';
   dr.textContent = 'Display ready';
   dr.onclick = function () { setActiveChip(this); onFilter(Filter.DISPLAY_READY); };
   container.appendChild(dr);

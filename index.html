@@ -18,10 +18,10 @@
   <div class="sidebar">
     <div class="sidebar-header">
       <div class="logo">Repair Tracker</div>
-      <div class="logo-sub">SMEM — <span id="userInfo"></span> <button class="logout-btn" id="logoutBtn">Log out</button></div>
+      <div class="logo-sub">SMEM — <span id="userInfo"></span> <button class="logout-btn btn-subtle" id="logoutBtn">Log out</button></div>
     </div>
     <div class="sidebar-search">
-      <input class="search-input" type="text" placeholder="Search instruments..." id="searchInput">
+      <input class="search-input input" type="text" placeholder="Search instruments..." id="searchInput">
     </div>
     <div class="sidebar-filters" id="sidebarFilters"></div>
     <div class="instrument-list" id="instrumentList"></div>
@@ -37,9 +37,9 @@
         <div class="instrument-id" id="instrId">Select an instrument</div>
       </div>
       <div class="header-badges">
-        <a href="#" class="airtable-link" onclick="return false;">↗ Airtable</a>
+        <a href="#" class="airtable-link tag tag-md" onclick="return false;">↗ Airtable</a>
         <div id="displayReadyBadge"></div>
-        <div class="status-badge tag-unknown" id="statusBadge">unknown</div>
+        <div class="status-badge tag tag-md tag-unknown" id="statusBadge">unknown</div>
       </div>
     </div>
 
@@ -73,10 +73,6 @@
         <div class="empty-state">← Select an instrument to view its log</div>
       </div>
 
-      <div class="add-log-bar hidden" id="addLogBar">
-        <button class="add-log-btn" id="addLogBtn">+ New entry</button>
-      </div>
-
       <div class="add-entry-panel" id="addEntryPanel">
         <div class="add-entry-header">
           <div class="add-entry-title" id="addEntryTitle">New log entry</div>
@@ -84,7 +80,7 @@
         <div class="add-entry-form">
           <div class="form-group">
             <label class="form-label">Type</label>
-            <select class="form-select" id="entryType">
+            <select class="form-select input" id="entryType">
               <option value="">— select type —</option>
               <option value="fault_report">Fault report</option>
               <option value="assessment">Assessment</option>
@@ -97,7 +93,7 @@
             <label class="form-label">Status
               <span id="statusHint" class="status-hint"></span>
             </label>
-            <select class="form-select" id="entryNewStatus">
+            <select class="form-select input" id="entryNewStatus">
               <option value="unknown">Unknown</option>
               <option value="broken">Broken</option>
               <option value="working">Working</option>
@@ -107,7 +103,7 @@
           </div>
           <div class="form-group" id="scoreGroup">
             <label class="form-label">Condition score</label>
-            <select class="form-select" id="entryScore">
+            <select class="form-select input" id="entryScore">
               <option value="1">1 — non-functional</option>
               <option value="2">2</option><option value="3">3</option><option value="4">4</option>
               <option value="5">5 — partial</option>
@@ -117,11 +113,11 @@
           </div>
           <div class="form-group">
             <label class="form-label">Date</label>
-            <input class="form-input" type="date" id="entryDate">
+            <input class="form-input input" type="date" id="entryDate">
           </div>
           <div class="form-group full" id="locationGroup">
             <label class="form-label">Location</label>
-            <input class="form-input" type="text" id="entryLocation" placeholder="Leave blank if unchanged">
+            <input class="form-input input" type="text" id="entryLocation" placeholder="Leave blank if unchanged">
           </div>
           <!-- Labels row -->
           <div class="form-group full" id="labelsFormGroup">
@@ -137,13 +133,13 @@
             <label class="form-label">Attachments</label>
             <div>
               <input type="file" class="attach-input" id="entryFiles" multiple accept="image/*,.pdf,.doc,.docx">
-              <button type="button" class="attach-btn">+ Add files</button>
+              <button type="button" class="attach-btn btn-subtle">+ Add files</button>
               <div class="attach-preview" id="attachPreview"></div>
             </div>
           </div>
           <div class="form-group full">
             <label class="form-label">Notes</label>
-            <textarea class="form-textarea" id="entryNotes" placeholder="Describe the work done, findings, or next steps…"></textarea>
+            <textarea class="form-textarea input" id="entryNotes" placeholder="Describe the work done, findings, or next steps…"></textarea>
           </div>
           <div class="form-group full form-actions">
             <button class="submit-btn" id="submitBtn" disabled>Log entry</button>
@@ -151,7 +147,13 @@
         </div>
       </div><!-- /add-entry-panel -->
 
+
     </div><!-- /log-area -->
+
+    <div class="add-log-bar hidden" id="addLogBar">
+      <button class="add-log-btn btn-subtle" id="addLogBtn">+ New entry</button>
+    </div>
+
     </div><!-- /main-content -->
   </div><!-- /main -->
 </div><!-- /app -->
