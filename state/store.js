@@ -1,4 +1,5 @@
 import { Filter } from '../domain/constants.js';
+import { createDraft } from '../domain/models.js';
 
 const state = {
   session: null,       // { user, capabilities } from auth
@@ -28,11 +29,7 @@ export function saveDraft(id, formValues) {
     delete state.drafts[id];
     return;
   }
-  state.drafts[id] = {
-    ...formValues,
-    pendingLabels: { ...state.pendingLabels },
-    stagedFiles: [...state.stagedFiles],
-  };
+  state.drafts[id] = createDraft(formValues, state.pendingLabels, state.stagedFiles);
 }
 
 /**

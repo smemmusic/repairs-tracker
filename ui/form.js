@@ -1,4 +1,4 @@
-import { LABELS, EntryType, LabelAction } from '../domain/constants.js';
+import { LABELS, Status, EntryType, LabelAction } from '../domain/constants.js';
 import { getScore, getDisplayReadyChecks } from '../domain/computed.js';
 import { displayReadyBadgeHTML, esc } from './shared.js';
 
@@ -118,7 +118,7 @@ export function applyCapabilities(capabilities) {
  */
 export function setFormValues(values) {
   document.getElementById('entryType').value = values.type || '';
-  document.getElementById('entryNewStatus').value = values.status || 'unknown';
+  document.getElementById('entryNewStatus').value = values.status || Status.UNKNOWN;
   document.getElementById('entryScore').value = values.score || '5';
   document.getElementById('entryDate').value = values.date || new Date().toISOString().split('T')[0];
   document.getElementById('entryLocation').value = values.location || '';

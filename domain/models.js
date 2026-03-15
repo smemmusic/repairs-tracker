@@ -125,28 +125,17 @@ export function createCapabilities(overrides = {}) {
   };
 }
 
+/** @returns {Attachment} */
+export function createAttachment({ name, type, url }) {
+  return { name, type, url };
+}
+
 /** @returns {Draft} */
-export function createDraft(overrides = {}) {
+export function createDraft(formValues, pendingLabels, stagedFiles) {
   return {
-    type: '',
-    status: '',
-    score: '',
-    date: '',
-    location: '',
-    notes: '',
-    formOpen: false,
-    pendingLabels: {},
-    stagedFiles: [],
-    ...overrides,
+    ...formValues,
+    pendingLabels: { ...pendingLabels },
+    stagedFiles: [...stagedFiles],
   };
 }
 
-/** @returns {Attachment} */
-export function createAttachment(overrides = {}) {
-  return {
-    name: '',
-    type: '',
-    url: '',
-    ...overrides,
-  };
-}

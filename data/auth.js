@@ -43,7 +43,7 @@ export async function login(userId, password) {
 
   currentSession = createSession(
     { id: contributor.id, name: contributor.name },
-    { ...AUTHENTICATED_CAPABILITIES },
+    AUTHENTICATED_CAPABILITIES,
   );
 
   persistSession();
@@ -55,7 +55,7 @@ export async function login(userId, password) {
  * Returns { user: null, capabilities } with limited permissions.
  */
 export async function loginAsGuest() {
-  currentSession = createSession(null, { ...GUEST_CAPABILITIES });
+  currentSession = createSession(null, GUEST_CAPABILITIES);
 
   persistSession();
   return currentSession;

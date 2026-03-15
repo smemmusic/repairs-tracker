@@ -1,6 +1,7 @@
 import * as api from './data/api.js';
 import * as store from './state/store.js';
 import { getScore } from './domain/computed.js';
+import { createAttachment } from './domain/models.js';
 import { inferStatusSuggestion, inferLabelSuggestions } from './domain/inference.js';
 import { renderFilters, renderInstrumentList, renderUserInfo } from './ui/sidebar.js';
 import { renderDetailHeader, renderLocationStrip, renderLabelsStrip, renderScoreStrip, renderDisplayReadyBadge } from './ui/detail.js';
@@ -8,7 +9,7 @@ import { renderLog } from './ui/log.js';
 import * as form from './ui/form.js';
 import { showLoginScreen } from './ui/login.js';
 import { getSession, logout } from './data/auth.js';
-import { EntryType, LabelAction, Filter } from './domain/constants.js';
+import { EntryType, LabelAction, Filter, partitionLabelActions } from './domain/constants.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -166,12 +167,7 @@ async function submitEntry() {
 
   if (editingId) {
     // Edit mode — update existing entry
-    // Collect label deltas from pending
-    const pendingLabels = store.get('pendingLabels');
-    const labelsAdded = Object.entries(pendingLabels)
-      .filter(([, v]) => v === LabelAction.ADD).map(([k]) => k);
-    const labelsRemoved = Object.entries(pendingLabels)
-      .filter(([, v]) => v === LabelAction.REMOVE).map(([k]) => k);
+    const { added: labelsAdded, removed: labelsRemoved } = partitionLabelActions(store.get('pendingLabels'));
 
     try {
       await api.editLogEntry(id, editingId, {
@@ -196,13 +192,7 @@ async function submitEntry() {
     const effectiveScore = (values.score && parseInt(values.score) !== currentScore)
       ? parseInt(values.score) : null;
 
-    const pendingLabels = store.get('pendingLabels');
-    const labelsAdded = [];
-    const labelsRemoved = [];
-    Object.entries(pendingLabels).forEach(([key, action]) => {
-      if (action === LabelAction.ADD && !raw.labels.includes(key)) labelsAdded.push(key);
-      if (action === LabelAction.REMOVE) labelsRemoved.push(key);
-    });
+    const { added: labelsAdded, removed: labelsRemoved } = partitionLabelActions(store.get('pendingLabels'));
 
     try {
       await api.addLogEntry(id, {
@@ -214,7 +204,7 @@ async function submitEntry() {
         location: values.location || null,
         labelsAdded,
         labelsRemoved,
-        attachments: store.get('stagedFiles').map(f => ({ name: f.name, type: f.type, url: f.url })),
+        attachments: store.get('stagedFiles').map(f => createAttachment(f)),
       });
     } catch (e) {
       alert(e.message);
@@ -224,6 +214,7 @@ async function submitEntry() {
   }
 
   // Clear form state and reset DOM so stale values don't get re-saved as a draft
+  store.get('stagedFiles').forEach(f => URL.revokeObjectURL(f.url));
   store.set('stagedFiles', []);
   store.set('pendingLabels', {});
   store.set('editingEntryId', null);
@@ -365,7 +356,7 @@ function onFilesSelected() {
   const stagedFiles = store.get('stagedFiles');
   for (const file of input.files) {
     const url = URL.createObjectURL(file);
-    stagedFiles.push({ name: file.name, type: file.type, url });
+    stagedFiles.push(createAttachment({ name: file.name, type: file.type, url }));
   }
   store.set('stagedFiles', stagedFiles);
   input.value = '';
@@ -439,6 +430,7 @@ function resetAppState() {
   store.set('selectedId', null);
   store.set('activeFilter', Filter.ALL);
   store.set('pendingLabels', {});
+  store.get('stagedFiles').forEach(f => URL.revokeObjectURL(f.url));
   store.set('stagedFiles', []);
   store.set('editingEntryId', null);
 

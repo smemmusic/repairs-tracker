@@ -66,3 +66,18 @@ export const LABELS = [
 export function getLabelDef(key) {
   return LABELS.find(l => l.key === key);
 }
+
+/**
+ * Split a pendingLabels map into { added, removed } arrays.
+ * @param {Object.<string, LabelAction>} labelMap
+ * @returns {{ added: string[], removed: string[] }}
+ */
+export function partitionLabelActions(labelMap) {
+  const added = [];
+  const removed = [];
+  for (const [key, action] of Object.entries(labelMap)) {
+    if (action === LabelAction.ADD) added.push(key);
+    else if (action === LabelAction.REMOVE) removed.push(key);
+  }
+  return { added, removed };
+}

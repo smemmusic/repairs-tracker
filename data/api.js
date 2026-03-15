@@ -2,7 +2,7 @@ import { instruments as seedData, contributors } from './seed.js';
 import { getScore, isDisplayReady } from '../domain/computed.js';
 import { getSession } from './auth.js';
 import { inferStatusSuggestion, inferLabelSuggestions } from '../domain/inference.js';
-import { STORAGE_KEY_INSTRUMENTS, Status, EntryType, LabelAction, Filter } from '../domain/constants.js';
+import { STORAGE_KEY_INSTRUMENTS, Status, EntryType, Filter, partitionLabelActions } from '../domain/constants.js';
 import { createLogEntry } from '../domain/models.js';
 
 // In-memory store backed by localStorage — will be replaced by fetch() calls to FastAPI
@@ -27,20 +27,6 @@ export async function resetAllData() {
 }
 
 const instruments = loadInstruments();
-
-/**
- * List all contributors.
- */
-export async function listContributors() {
-  return contributors;
-}
-
-/**
- * Get a contributor by ID, or null.
- */
-export async function getContributor(id) {
-  return contributors.find(c => c.id === id) || null;
-}
 
 /**
  * Get a contributor's display name by ID.
@@ -134,10 +120,9 @@ export async function addLogEntry(instrumentId, entry) {
       entry.status = suggestedStatus;
     }
     if (!caps.setLabels) {
-      entry.labelsAdded = Object.entries(suggestedLabels)
-        .filter(([, v]) => v === LabelAction.ADD).map(([k]) => k);
-      entry.labelsRemoved = Object.entries(suggestedLabels)
-        .filter(([, v]) => v === LabelAction.REMOVE).map(([k]) => k);
+      const { added, removed } = partitionLabelActions(suggestedLabels);
+      entry.labelsAdded = added;
+      entry.labelsRemoved = removed;
     }
   }
   if (!inst) throw new Error(`Instrument not found: ${instrumentId}`);
