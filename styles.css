@@ -63,8 +63,8 @@ select.input { cursor: pointer; appearance: none; }
 
 /* ── Layout ─────────────────────────────────────────────────────────── */
 
-body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: var(--fs-xl); min-height: 100vh; line-height: 1.5; }
-.app { display: flex; height: 100vh; overflow: hidden; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: var(--fs-xl); min-height: 100dvh; line-height: 1.5; }
+.app { display: flex; height: 100dvh; overflow: hidden; }
 .hidden { display: none !important; }
 
 /* ── Sidebar ────────────────────────────────────────────────────────── */
@@ -318,7 +318,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
   :root { --pad-main: 16px; }
 
   .app { flex-direction: column; position: relative; }
-  .sidebar { width: 100%; min-width: 100%; height: 100vh; position: absolute; inset: 0; z-index: 20; }
+  .sidebar { width: 100%; min-width: 100%; height: 100dvh; position: absolute; inset: 0; z-index: 20; }
   .main { width: 100%; position: absolute; inset: 0; z-index: 10; }
   .app.instrument-selected .sidebar { z-index: 10; }
   .app.instrument-selected .main { z-index: 20; }
