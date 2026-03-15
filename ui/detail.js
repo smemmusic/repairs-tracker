@@ -1,5 +1,6 @@
 import { getLabelDef } from '../domain/constants.js';
-import { getScore, isDisplayReady } from '../domain/computed.js';
+import { getScore, getDisplayReadyChecks } from '../domain/computed.js';
+import { displayReadyBadgeHTML } from './shared.js';
 
 /**
  * Render the instrument detail header (title, serial, status badge).
@@ -82,6 +83,7 @@ export function renderScoreStrip(instrument, capabilities, rawInstrument) {
 export function renderDisplayReadyBadge(instrument) {
   const el = document.getElementById('displayReadyBadge');
   if (!el) return;
-  const ready = isDisplayReady(instrument);
-  el.innerHTML = `<span class="display-ready-badge ${ready ? 'pass' : 'fail'}">${ready ? '✓' : '✗'} Display ready</span>`;
+  const score = getScore(instrument);
+  const checks = getDisplayReadyChecks(instrument.status, instrument.labels, score);
+  el.innerHTML = displayReadyBadgeHTML(checks);
 }

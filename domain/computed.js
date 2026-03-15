@@ -20,3 +20,16 @@ export function isDisplayReady(instrument) {
     && score >= DISPLAY_READY_THRESHOLD
   );
 }
+
+/**
+ * Returns the display-ready checks for given state.
+ * Each check has { label, pass }.
+ */
+export function getDisplayReadyChecks(status, labels, score) {
+  return [
+    { label: 'Status: working', pass: status === 'working' },
+    { label: 'No active labels', pass: labels.length === 0 },
+    { label: `Score \u2265 ${DISPLAY_READY_THRESHOLD}`, pass: score !== null && score >= DISPLAY_READY_THRESHOLD },
+  ];
+}
+

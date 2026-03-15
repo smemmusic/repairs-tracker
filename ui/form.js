@@ -1,6 +1,6 @@
-import { DISPLAY_READY_THRESHOLD } from '../domain/constants.js';
-import { getLabelDef, LABELS } from '../domain/constants.js';
-import { getScore } from '../domain/computed.js';
+import { LABELS } from '../domain/constants.js';
+import { getScore, getDisplayReadyChecks } from '../domain/computed.js';
+import { displayReadyBadgeHTML } from './shared.js';
 
 /**
  * Open the entry form panel and update button text.
@@ -234,21 +234,8 @@ export function renderDisplayReadyPreview(projectedStatus, projectedScore, proje
     return;
   }
 
-  const checks = [
-    { label: 'Status: working', pass: projectedStatus === 'working' },
-    { label: 'No active labels', pass: projectedLabels.length === 0 },
-    { label: `Score ≥ ${DISPLAY_READY_THRESHOLD}`, pass: projectedScore !== null && projectedScore >= DISPLAY_READY_THRESHOLD },
-  ];
-  const allPass = checks.every(c => c.pass);
-
-  container.innerHTML = `
-    <span class="dr-preview-wrap">
-      <span class="display-ready-badge ${allPass ? 'pass' : 'fail'}">${allPass ? '✓' : '✗'} Display ready</span>
-      <span class="dr-tooltip">${checks.map(c =>
-        `<span class="${c.pass ? 'dr-check-pass' : 'dr-check-fail'}">${c.pass ? '✓' : '✗'} ${c.label}</span>`
-      ).join('')}</span>
-    </span>
-  `;
+  const checks = getDisplayReadyChecks(projectedStatus, projectedLabels, projectedScore);
+  container.innerHTML = displayReadyBadgeHTML(checks);
 }
 
 /**
