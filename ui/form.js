@@ -270,7 +270,7 @@ export function renderDisplayReadyPreview(projectedStatus, projectedScore, proje
         border:1px solid ${allPass ? 'var(--green)' : 'var(--red)'};
         color:${allPass ? 'var(--green)' : 'var(--red)'};
         background:${allPass ? 'rgba(74,158,110,0.08)' : 'rgba(158,74,74,0.08)'};
-        font-weight:500;opacity:${allPass ? '1' : '0.7'};cursor:default;
+        font-weight:500;opacity:${allPass ? '1' : '0.7'};cursor:default;text-transform:uppercase;letter-spacing:0.06em;
       ">${allPass ? '✓' : '✗'} Display ready</span>
       <span class="dr-tooltip">${checks.map(c =>
         `<span style="color:${c.pass ? 'var(--green)' : 'var(--red)'};">${c.pass ? '✓' : '✗'} ${c.label}</span>`

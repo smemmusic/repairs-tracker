@@ -80,7 +80,7 @@ export function renderInstrumentList(instruments, selectedId, onSelect) {
       <div class="instrument-meta">
         <div class="status-dot s-${inst.status}"></div>
         <span class="status-label-small">${inst.status}</span>
-        ${displayReady ? '<span style="font-family:var(--mono);font-size:8px;color:var(--green);border:1px solid var(--green-dim);padding:1px 5px;border-radius:2px;">display ready</span>' : ''}
+        ${displayReady ? '<span style="font-family:var(--mono);font-size:8px;color:var(--green);border:1px solid var(--green-dim);padding:1px 5px;border-radius:2px;text-transform:uppercase;letter-spacing:0.06em;">display ready</span>' : ''}
         <span class="entry-count">${inst.log.length}</span>
       </div>
       ${inst.labels.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;">${labelPips}</div>` : ''}

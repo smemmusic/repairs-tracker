@@ -92,6 +92,7 @@ export function renderDisplayReadyBadge(instrument) {
     background: ${ready ? 'rgba(74,158,110,0.08)' : 'rgba(158,74,74,0.08)'};
     border-radius: 2px;
     letter-spacing: 0.08em;
+    text-transform: uppercase;
     text-decoration: none;
     opacity: ${ready ? '1' : '0.7'};
     white-space: nowrap;
