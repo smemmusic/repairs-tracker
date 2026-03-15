@@ -22,15 +22,22 @@ function getSearchValue() {
 }
 
 function showToast(message) {
+  const overlay = document.createElement('div');
+  overlay.className = 'toast-overlay';
   const toast = document.createElement('div');
   toast.className = 'toast';
   toast.textContent = message;
+  document.body.appendChild(overlay);
   document.body.appendChild(toast);
-  requestAnimationFrame(() => toast.classList.add('visible'));
+  requestAnimationFrame(() => {
+    overlay.classList.add('visible');
+    toast.classList.add('visible');
+  });
   setTimeout(() => {
     toast.classList.remove('visible');
-    setTimeout(() => toast.remove(), 300);
-  }, 2000);
+    overlay.classList.remove('visible');
+    setTimeout(() => { toast.remove(); overlay.remove(); }, 300);
+  }, 3000);
 }
 
 async function refreshSidebar() {
