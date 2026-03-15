@@ -12,7 +12,7 @@ export const instruments = [
     id: 'i1', airtable_id: 'AT-0042', display_name: 'Moog Minimoog Model D', serial_number: '12847',
     status: 'broken', labels: ['needs_repair'],
     log: [
-      { id: 'l1', type: 'assessment', date: '2026-02-18', contributor_id: 'c1', notes: 'Keyboard plays. All three oscillators audible but unstable above C4. Filter functioning. Keybed contacts dirty.', status: 'broken', score: 4, labels_added: ['needs_repair'], labels_removed: [] },
+      { id: 'l1', type: 'assessment', date: '2026-02-18', contributor_id: 'c1', notes: 'Keyboard plays. All three oscillators audible but unstable above C4. Filter functioning. Keybed contacts dirty.', status: 'broken', score: 4, labels_added: ['needs_repair'], labels_removed: [], location: 'Workshop' },
       { id: 'l2', type: 'cleaning',   date: '2026-02-25', contributor_id: 'c6', notes: 'Full keybed contact clean using Deoxit. Keys now registering correctly. Pitch and mod wheels freed up.', status: null, score: null, labels_added: [], labels_removed: [] },
       { id: 'l3', type: 'repair',     date: '2026-03-05', contributor_id: 'c3', notes: 'Replaced C14 and C18 on VCO board. Oscillator 1 tracking correctly. Oscillator 2 still drifts — trimmer calibration needed.', status: null, score: 6, labels_added: [], labels_removed: [] },
       { id: 'l4', type: 'repair',     date: '2026-03-12', contributor_id: 'c3', notes: 'Recalibrated OSC 2 trimmer R47. All three oscillators tracking within ±2 cents. Filter self-oscillation confirmed.', status: null, score: 8, labels_added: [], labels_removed: [] },
@@ -24,14 +24,14 @@ export const instruments = [
     log: [
       { id: 'l5', type: 'assessment', date: '2026-01-10', contributor_id: 'c1', notes: 'Voices 3 and 5 dead — 80017A chip failure. Four voices functional. Chorus working.', status: 'broken', score: 5, labels_added: ['needs_repair'], labels_removed: [] },
       { id: 'l6', type: 'repair',     date: '2026-02-01', contributor_id: 'c3', notes: 'Replaced 80017A chips on voices 3 and 5. All six voices now producing audio.', status: null, score: 7, labels_added: [], labels_removed: [] },
-      { id: 'l7', type: 'assessment', date: '2026-02-14', contributor_id: 'c1', notes: 'All six voices consistent. Chorus both modes functional. Approved for display.', status: 'working', score: 9, labels_added: [], labels_removed: ['needs_repair'] },
+      { id: 'l7', type: 'assessment', date: '2026-02-14', contributor_id: 'c1', notes: 'All six voices consistent. Chorus both modes functional. Approved for display.', status: 'working', score: 9, labels_added: [], labels_removed: ['needs_repair'], location: 'Playroom' },
     ]
   },
   {
     id: 'i3', airtable_id: 'AT-0008', display_name: 'ARP 2600', serial_number: null,
     status: 'broken', labels: ['needs_repair'],
     log: [
-      { id: 'l8', type: 'assessment', date: '2025-11-20', contributor_id: 'c1', notes: 'Significant corrosion on PSU board. VCO 1 non-functional. VCF intact. No serial number visible.', status: 'broken', score: 2, labels_added: ['needs_repair'], labels_removed: [] },
+      { id: 'l8', type: 'assessment', date: '2025-11-20', contributor_id: 'c1', notes: 'Significant corrosion on PSU board. VCO 1 non-functional. VCF intact. No serial number visible.', status: 'broken', score: 2, labels_added: ['needs_repair'], labels_removed: [], location: 'Workshop' },
     ]
   },
   {
@@ -46,7 +46,7 @@ export const instruments = [
     id: 'i5', airtable_id: 'AT-0055', display_name: 'Korg MS-20 (early)', serial_number: '100423',
     status: 'working', labels: [],
     log: [
-      { id: 'l11', type: 'assessment', date: '2025-09-10', contributor_id: 'c1', notes: 'Both oscillators stable. Filter working and self-oscillating. All patch points functional.', status: 'working', score: 8, labels_added: [], labels_removed: [] },
+      { id: 'l11', type: 'assessment', date: '2025-09-10', contributor_id: 'c1', notes: 'Both oscillators stable. Filter working and self-oscillating. All patch points functional.', status: 'working', score: 8, labels_added: [], labels_removed: [], location: 'Playroom' },
       { id: 'l12', type: 'cleaning',   date: '2025-10-02', contributor_id: 'c6', notes: 'Panel cleaned. Knob caps stabilised. Patch bay contacts cleaned.', status: null, score: 9, labels_added: [], labels_removed: [] },
     ]
   },
@@ -55,7 +55,7 @@ export const instruments = [
     status: 'broken', labels: ['needs_repair', 'needs_investigation'],
     log: [
       { id: 'l13', type: 'assessment',   date: '2026-01-05', contributor_id: 'c1', notes: 'Voices 2 and 4 intermittent. Patch memory intact. Needs voice card inspection.', status: 'broken', score: 5, labels_added: ['needs_repair'], labels_removed: [] },
-      { id: 'l14', type: 'repair',       date: '2026-01-20', contributor_id: 'c3', notes: 'Reseated voice card connectors. Voice 4 stable. Voice 2 still dropping — CEM3340 suspected. Replacement ordered.', status: null, score: 6, labels_added: [], labels_removed: [] },
+      { id: 'l14', type: 'repair',       date: '2026-01-20', contributor_id: 'c3', notes: 'Reseated voice card connectors. Voice 4 stable. Voice 2 still dropping — CEM3340 suspected. Replacement ordered.', status: null, score: 6, labels_added: [], labels_removed: [], location: 'Sent to external tech' },
       { id: 'l15', type: 'fault_report', date: '2026-02-10', contributor_id: null, notes: 'Pitch wheel not returning to centre. Spring feels weak.', status: null, score: null, labels_added: ['needs_investigation'], labels_removed: [] },
     ]
   },
@@ -81,7 +81,7 @@ export const instruments = [
     id: 'i9', airtable_id: 'AT-0039', display_name: 'Roland TB-303', serial_number: '351822',
     status: 'working', labels: [],
     log: [
-      { id: 'l22', type: 'assessment', date: '2024-06-01', contributor_id: 'c1', notes: 'All functions working. Accents and slides correct. Minor cosmetic wear only.', status: 'working', score: 9, labels_added: [], labels_removed: [] },
+      { id: 'l22', type: 'assessment', date: '2024-06-01', contributor_id: 'c1', notes: 'All functions working. Accents and slides correct. Minor cosmetic wear only.', status: 'working', score: 9, labels_added: [], labels_removed: [], location: 'Display case A' },
     ]
   },
   {
@@ -93,7 +93,7 @@ export const instruments = [
     id: 'i11', airtable_id: 'AT-0088', display_name: 'Korg Poly-61', serial_number: '290441',
     status: 'retired', labels: [],
     log: [
-      { id: 'l23', type: 'assessment', date: '2024-03-10', contributor_id: 'c3', notes: 'Beyond economic repair. Multiple failed voice chips, corroded PCBs. Retained for donor parts.', status: 'retired', score: 1, labels_added: [], labels_removed: [] },
+      { id: 'l23', type: 'assessment', date: '2024-03-10', contributor_id: 'c3', notes: 'Beyond economic repair. Multiple failed voice chips, corroded PCBs. Retained for donor parts.', status: 'retired', score: 1, labels_added: [], labels_removed: [], location: 'Storage B' },
     ]
   },
   {

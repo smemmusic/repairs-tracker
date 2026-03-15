@@ -22,6 +22,16 @@ export function isDisplayReady(instrument) {
 }
 
 /**
+ * Returns the current location from an instrument's log, or null.
+ */
+export function getLocation(instrument) {
+  for (let i = instrument.log.length - 1; i >= 0; i--) {
+    if (instrument.log[i].location) return instrument.log[i].location;
+  }
+  return null;
+}
+
+/**
  * Returns the display-ready checks for given state.
  * Each check has { label, pass }.
  */

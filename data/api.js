@@ -187,6 +187,7 @@ export async function addLogEntry(instrumentId, entry) {
     notes: entry.notes,
     status: effectiveStatus,
     score: effectiveScore,
+    location: entry.location || null,
     labels_added: labelsAdded,
     labels_removed: labelsRemoved,
     attachments: entry.attachments || [],

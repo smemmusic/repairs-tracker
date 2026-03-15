@@ -3,7 +3,7 @@ import * as store from './state/store.js';
 import { getScore } from './domain/computed.js';
 import { inferStatusSuggestion, inferLabelSuggestions } from './domain/inference.js';
 import { renderFilters, renderInstrumentList, renderUserInfo } from './ui/sidebar.js';
-import { renderDetailHeader, renderLabelsStrip, renderScoreStrip, renderDisplayReadyBadge } from './ui/detail.js';
+import { renderDetailHeader, renderLocationStrip, renderLabelsStrip, renderScoreStrip, renderDisplayReadyBadge } from './ui/detail.js';
 import { renderLog } from './ui/log.js';
 import * as form from './ui/form.js';
 import { showLoginScreen } from './ui/login.js';
@@ -89,6 +89,7 @@ async function selectInstrument(id) {
   // Render detail panels
   await refreshSidebar();
   renderDetailHeader(inst);
+  renderLocationStrip(raw);
   renderLabelsStrip(inst);
   renderDisplayReadyBadge(raw);
   renderScoreStrip(inst, c, raw);
@@ -183,6 +184,7 @@ async function addEntry() {
       notes: values.notes.trim(),
       status: effectiveStatus,
       score: effectiveScore,
+      location: values.location || null,
       labelsAdded,
       labelsRemoved,
       attachments: store.get('stagedFiles').map(f => ({ name: f.name, type: f.type, url: f.url })),

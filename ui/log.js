@@ -28,6 +28,9 @@ export function renderLog(instrument, capabilities, onDelete) {
     const statusTag = entry.status
       ? `<span class="status-change-tag tag-${entry.status}">→ ${entry.status}</span>` : '';
 
+    const locationTag = entry.location
+      ? `<span class="log-location-tag">→ ${entry.location}</span>` : '';
+
     const labelTags = [
       ...(entry.labels_added || []).map(key => {
         const d = getLabelDef(key);
@@ -67,7 +70,7 @@ export function renderLog(instrument, capabilities, onDelete) {
       <div>
         <div class="log-top">
           <span class="entry-type-tag ${entry.type}">${entry.type.replace('_', ' ')}</span>
-          ${statusTag}${labelTags}${scoreTag}
+          ${statusTag}${locationTag}${labelTags}${scoreTag}
           ${deleteBtn}
         </div>
         <div class="log-notes">${entry.notes}</div>

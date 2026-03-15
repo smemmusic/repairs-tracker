@@ -1,9 +1,11 @@
 import { getLabelDef } from '../domain/constants.js';
-import { getScore, getDisplayReadyChecks } from '../domain/computed.js';
+import { getScore, getLocation, getDisplayReadyChecks } from '../domain/computed.js';
 import { displayReadyBadgeHTML } from './shared.js';
 
 /**
- * Render the instrument detail header (title, serial, status badge).
+ * Render the instrument detail header (title, serial, location, status badge).
+ * @param {Object} instrument - instrument (may be permission-filtered)
+ * @param {Object} rawInstrument - instrument with full log (for location)
  */
 export function renderDetailHeader(instrument) {
   document.getElementById('instrTitle').textContent = instrument.display_name;
@@ -13,6 +15,15 @@ export function renderDetailHeader(instrument) {
   const badge = document.getElementById('statusBadge');
   badge.textContent = instrument.status;
   badge.className = `status-badge tag-${instrument.status}`;
+}
+
+/**
+ * Render the location strip.
+ * @param {Object} rawInstrument - instrument with full log (for location derivation)
+ */
+export function renderLocationStrip(rawInstrument) {
+  const location = getLocation(rawInstrument);
+  document.getElementById('locationValue').textContent = location || '—';
 }
 
 /**

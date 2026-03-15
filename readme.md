@@ -38,7 +38,7 @@ The Repair Tracker is an internal tool for a synthesiser museum to manage the li
 
 ### Permissions
 
-| Action | Unauthenticated | Authenticated (Drupal) |
+| Action | Unauthenticated | Authenticated |
 |---|---|---|
 | View instruments (status + labels) | yes | yes |
 | View full log history + scores | no | yes |

@@ -40,11 +40,16 @@
       <div class="status-badge tag-unknown" id="statusBadge">unknown</div>
     </div>
 
-    <div class="labels-strip" id="labelsStrip">
+    <div class="info-strip" id="locationStrip">
+      <span class="labels-empty">Location:</span>
+      <span class="location-value" id="locationValue">—</span>
+    </div>
+
+    <div class="info-strip" id="labelsStrip">
       <span class="labels-empty">No active labels</span>
     </div>
 
-    <div class="score-strip">
+    <div class="info-strip score-strip">
       <div class="score-item">
         <span class="score-lbl">Condition</span>
         <div class="score-bar" id="scoreBar"></div>
@@ -107,6 +112,10 @@
           <div class="form-group">
             <label class="form-label">Date</label>
             <input class="form-input" type="date" id="entryDate">
+          </div>
+          <div class="form-group full" id="locationGroup">
+            <label class="form-label">Location</label>
+            <input class="form-input" type="text" id="entryLocation" placeholder="Leave blank if unchanged">
           </div>
           <!-- Labels row -->
           <div class="form-group full" id="labelsFormGroup">

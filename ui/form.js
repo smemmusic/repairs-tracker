@@ -46,6 +46,7 @@ export function readFormValues() {
     status: document.getElementById('entryNewStatus').value,
     score: document.getElementById('entryScore').value,
     date: document.getElementById('entryDate').value,
+    location: document.getElementById('entryLocation').value.trim(),
     notes: document.getElementById('entryNotes').value,
     formOpen: document.getElementById('addEntryPanel').classList.contains('open'),
   };
@@ -87,10 +88,12 @@ export function applyCapabilities(capabilities) {
   const dateInput = document.getElementById('entryDate');
   if (dateInput) dateInput.disabled = isGuest;
 
-  // Score, labels, display-ready: hidden for guests
+  // Score, labels, location, display-ready: hidden for guests
   const labelsGroup = document.getElementById('labelsFormGroup');
+  const locationGroup = document.getElementById('locationGroup');
   if (scoreGroup) scoreGroup.classList.toggle('hidden', isGuest);
   if (labelsGroup) labelsGroup.classList.toggle('hidden', isGuest);
+  if (locationGroup) locationGroup.classList.toggle('hidden', isGuest);
   if (displayReadyGroup) displayReadyGroup.classList.toggle('hidden', isGuest);
 }
 
@@ -102,6 +105,7 @@ export function setFormValues(values) {
   document.getElementById('entryNewStatus').value = values.status || 'unknown';
   document.getElementById('entryScore').value = values.score || '5';
   document.getElementById('entryDate').value = values.date || new Date().toISOString().split('T')[0];
+  document.getElementById('entryLocation').value = values.location || '';
   document.getElementById('entryNotes').value = values.notes || '';
   document.getElementById('submitBtn').disabled = !values.type;
 }
