@@ -2,7 +2,7 @@ import { instruments as seedData, contributors } from './seed.js';
 import { getScore, isDisplayReady } from '../domain/computed.js';
 import { getSession } from './auth.js';
 import { inferStatusSuggestion, inferLabelSuggestions } from '../domain/inference.js';
-import { STORAGE_KEY_INSTRUMENTS, Status, EntryType, LabelAction, Filter, isTerminalStatus } from '../domain/constants.js';
+import { STORAGE_KEY_INSTRUMENTS, Status, EntryType, LabelAction, Filter } from '../domain/constants.js';
 import { createLogEntry } from '../domain/models.js';
 
 // In-memory store backed by localStorage — will be replaced by fetch() calls to FastAPI
@@ -142,10 +142,8 @@ export async function addLogEntry(instrumentId, entry) {
   }
   if (!inst) throw new Error(`Instrument not found: ${instrumentId}`);
 
-  const terminal = isTerminalStatus(inst.status);
-
   // Determine effective status change
-  const effectiveStatus = (!terminal && entry.status && entry.status !== inst.status)
+  const effectiveStatus = (entry.status && entry.status !== inst.status)
     ? entry.status : null;
   if (effectiveStatus) {
     inst.status = effectiveStatus;

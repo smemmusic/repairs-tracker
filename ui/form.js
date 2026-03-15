@@ -1,4 +1,4 @@
-import { LABELS, EntryType, LabelAction, isTerminalStatus } from '../domain/constants.js';
+import { LABELS, EntryType, LabelAction } from '../domain/constants.js';
 import { getScore, getDisplayReadyChecks } from '../domain/computed.js';
 import { displayReadyBadgeHTML } from './shared.js';
 
@@ -138,21 +138,12 @@ export function resetForm(instrument) {
     notes: '',
   });
   clearStatusHint();
-
-  const terminal = isTerminalStatus(instrument.status);
-  const statusSelect = document.getElementById('entryNewStatus');
-  statusSelect.disabled = terminal;
-  statusSelect.classList.toggle('terminal', terminal);
 }
 
 /**
- * Configure the status select for terminal states.
+ * Configure the status select (no-op, kept for call-site compatibility).
  */
-export function configureStatusSelect(instrument) {
-  const terminal = isTerminalStatus(instrument.status);
-  const statusSelect = document.getElementById('entryNewStatus');
-  statusSelect.disabled = terminal;
-  statusSelect.classList.toggle('terminal', terminal);
+export function configureStatusSelect(_instrument) {
 }
 
 /**

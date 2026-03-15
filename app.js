@@ -8,7 +8,7 @@ import { renderLog } from './ui/log.js';
 import * as form from './ui/form.js';
 import { showLoginScreen } from './ui/login.js';
 import { getSession, logout } from './data/auth.js';
-import { EntryType, LabelAction, Filter, isTerminalStatus } from './domain/constants.js';
+import { EntryType, LabelAction, Filter } from './domain/constants.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -191,8 +191,7 @@ async function submitEntry() {
     showToast('Log entry updated');
   } else {
     // Create mode — add new entry
-    const terminal = isTerminalStatus(raw.status);
-    const effectiveStatus = (!terminal && values.status && values.status !== raw.status)
+    const effectiveStatus = (values.status && values.status !== raw.status)
       ? values.status : null;
     const currentScore = getScore(raw);
     const effectiveScore = (values.score && parseInt(values.score) !== currentScore)

@@ -43,13 +43,6 @@ export const Filter = Object.freeze({
   ...Status,
 });
 
-// ── Helpers ──────────────────────────────────────────────────────────
-
-const TERMINAL_STATUSES = new Set([Status.RETIRED, Status.DISPOSED]);
-
-export function isTerminalStatus(status) {
-  return TERMINAL_STATUSES.has(status);
-}
 
 // ── Metadata ─────────────────────────────────────────────────────────
 
