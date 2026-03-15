@@ -1,4 +1,5 @@
 import { getLoginUsers, login, loginAsGuest } from '../data/auth.js';
+import { resetAllData } from '../data/api.js';
 
 /**
  * Render and show the login overlay.
@@ -33,6 +34,10 @@ export function showLoginScreen(onAuthenticated) {
         <div class="login-divider"><span>or</span></div>
         <button class="login-btn login-btn-guest" id="guestBtn">Continue without login</button>
       </div>
+      <div class="login-reset">
+        <button class="login-reset-btn" id="resetBtn">Reset demo data</button>
+        <span class="login-reset-hint">Clears all changes and restores seed data</span>
+      </div>
     </div>
   `;
 
@@ -56,6 +61,12 @@ export function showLoginScreen(onAuthenticated) {
     const session = await loginAsGuest();
     overlay.classList.remove('visible');
     onAuthenticated(session);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', async () => {
+    if (!confirm('Are you sure you want to reset the demo data?')) return;
+    await resetAllData();
+    window.location.reload();
   });
 
   // Allow Enter key to submit

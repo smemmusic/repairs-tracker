@@ -235,6 +235,10 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 .login-divider { text-align: center; font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 0.06em; }
 .login-divider span { background: var(--bg2); padding: 0 8px; }
 .login-error { font-family: var(--mono); font-size: 10px; color: var(--red); min-height: 14px; }
+.login-reset { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); text-align: center; }
+.login-reset-btn { font-family: var(--mono); font-size: 9px; color: var(--text3); background: none; border: 1px dashed var(--border2); padding: 4px 12px; border-radius: 2px; cursor: pointer; letter-spacing: 0.04em; transition: all 0.12s; }
+.login-reset-btn:hover { border-color: var(--red); color: var(--red); }
+.login-reset-hint { display: block; font-family: var(--mono); font-size: 9px; color: var(--text3); margin-top: 6px; opacity: 0.6; }
 
 /* Toast */
 .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(8px); font-family: var(--mono); font-size: 11px; color: var(--green); background: var(--bg2); border: 1px solid var(--green-dim); padding: 8px 20px; border-radius: 2px; letter-spacing: 0.06em; opacity: 0; transition: opacity 0.3s, transform 0.3s; z-index: 300; pointer-events: none; }

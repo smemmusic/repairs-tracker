@@ -183,7 +183,6 @@ async function addEntry() {
       notes: values.notes.trim(),
       status: effectiveStatus,
       score: effectiveScore,
-      contributor_id: values.contributorId,
       labelsAdded,
       labelsRemoved,
       attachments: store.get('stagedFiles').map(f => ({ name: f.name, type: f.type, url: f.url })),
@@ -330,12 +329,6 @@ async function startApp(session) {
 
   // Render user info in sidebar
   renderUserInfo(session);
-
-  // Populate contributor dropdown for authenticated users
-  if (session.capabilities.submitOtherEntryTypes) {
-    const contributors = await api.listContributors();
-    form.populateContributors(contributors, session.user?.id);
-  }
 
   // Apply form capabilities
   form.applyCapabilities(session.capabilities);

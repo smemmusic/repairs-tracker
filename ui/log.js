@@ -57,10 +57,10 @@ export function renderLog(instrument, capabilities, onDelete) {
       }
     }).join('')}</div>` : '';
 
-    // Resolve contributor name
+    // Resolve contributor name — null means visitor
     const authorName = entry.contributor_id
       ? getContributorName(entry.contributor_id)
-      : (entry.author || 'Unknown');
+      : 'Visitor';
 
     const deleteBtn = (capabilities.deleteLogEntry && onDelete)
       ? `<button class="log-delete-btn" data-id="${entry.id}" title="Delete entry">✕</button>` : '';

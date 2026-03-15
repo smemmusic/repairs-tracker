@@ -5,7 +5,6 @@ export const contributors = [
   { id: 'c4', name: 'Chris', drupal_user_id: 'chris' },
   { id: 'c5', name: 'Victorien', drupal_user_id: 'victorien' },
   { id: 'c6', name: 'Laurent', drupal_user_id: 'laurent' },
-  { id: 'c7', name: 'Visitor', drupal_user_id: null },
 ];
 
 export const instruments = [
@@ -57,7 +56,7 @@ export const instruments = [
     log: [
       { id: 'l13', type: 'assessment',   date: '2026-01-05', contributor_id: 'c1', notes: 'Voices 2 and 4 intermittent. Patch memory intact. Needs voice card inspection.', status: 'broken', score: 5, labels_added: ['needs_repair'], labels_removed: [] },
       { id: 'l14', type: 'repair',       date: '2026-01-20', contributor_id: 'c3', notes: 'Reseated voice card connectors. Voice 4 stable. Voice 2 still dropping — CEM3340 suspected. Replacement ordered.', status: null, score: 6, labels_added: [], labels_removed: [] },
-      { id: 'l15', type: 'fault_report', date: '2026-02-10', contributor_id: 'c7', notes: 'Pitch wheel not returning to centre. Spring feels weak.', status: null, score: null, labels_added: ['needs_investigation'], labels_removed: [] },
+      { id: 'l15', type: 'fault_report', date: '2026-02-10', contributor_id: null, notes: 'Pitch wheel not returning to centre. Spring feels weak.', status: null, score: null, labels_added: ['needs_investigation'], labels_removed: [] },
     ]
   },
   {
@@ -75,7 +74,7 @@ export const instruments = [
     log: [
       { id: 'l19', type: 'assessment',   date: '2025-09-10', contributor_id: 'c2', notes: 'Pin matrix intact. Oscillators drifting. Full calibration required.', status: 'broken', score: 6, labels_added: ['needs_repair'], labels_removed: [] },
       { id: 'l20', type: 'repair',       date: '2025-10-01', contributor_id: 'c3', notes: 'Full calibration completed. All oscillators and noise source confirmed working.', status: 'working', score: 9, labels_added: [], labels_removed: ['needs_repair'] },
-      { id: 'l21', type: 'fault_report', date: '2026-03-10', contributor_id: 'c7', notes: 'Pin matrix joystick sticky, not springing back. Noticed during visitor demo.', status: 'unknown', score: null, labels_added: ['needs_investigation'], labels_removed: [] },
+      { id: 'l21', type: 'fault_report', date: '2026-03-10', contributor_id: null, notes: 'Pin matrix joystick sticky, not springing back. Noticed during visitor demo.', status: 'unknown', score: null, labels_added: ['needs_investigation'], labels_removed: [] },
     ]
   },
   {

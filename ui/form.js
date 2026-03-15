@@ -47,22 +47,8 @@ export function readFormValues() {
     score: document.getElementById('entryScore').value,
     date: document.getElementById('entryDate').value,
     notes: document.getElementById('entryNotes').value,
-    contributorId: document.getElementById('entryContributor')?.value || null,
     formOpen: document.getElementById('addEntryPanel').classList.contains('open'),
   };
-}
-
-/**
- * Populate the contributor dropdown.
- * @param {Array} contributors - array of { id, name }
- * @param {string|null} selectedUserId - the logged-in user's contributor id to pre-select
- */
-export function populateContributors(contributors, selectedUserId) {
-  const select = document.getElementById('entryContributor');
-  if (!select) return;
-  select.innerHTML = contributors.map(c =>
-    `<option value="${c.id}"${c.id === selectedUserId ? ' selected' : ''}>${c.name}</option>`
-  ).join('');
 }
 
 /**
@@ -74,7 +60,6 @@ export function applyCapabilities(capabilities) {
   const typeSelect = document.getElementById('entryType');
   const scoreGroup = document.getElementById('scoreGroup');
   const displayReadyGroup = document.getElementById('displayReadyGroup');
-  const contributorGroup = document.getElementById('contributorGroup');
 
   const isGuest = !capabilities.submitOtherEntryTypes;
 
@@ -107,7 +92,6 @@ export function applyCapabilities(capabilities) {
 
   // Display-ready, contributor: hidden for guests
   if (displayReadyGroup) displayReadyGroup.classList.toggle('hidden', !capabilities.viewScores);
-  if (contributorGroup) contributorGroup.classList.toggle('hidden', isGuest);
 }
 
 /**

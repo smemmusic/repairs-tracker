@@ -18,6 +18,13 @@ function persist() {
   localStorage.setItem(STORAGE_KEY_INSTRUMENTS, JSON.stringify(instruments));
 }
 
+/**
+ * Reset all instrument data to seed state.
+ */
+export async function resetAllData() {
+  localStorage.removeItem(STORAGE_KEY_INSTRUMENTS);
+}
+
 const instruments = loadInstruments();
 
 /**
@@ -169,10 +176,8 @@ export async function addLogEntry(instrumentId, entry) {
     }
   }
 
-  // Resolve contributor — use session user for guests, or the provided contributor_id
-  const contributorId = entry.contributor_id
-    || (session?.user?.id)
-    || 'c7'; // fallback to Visitor
+  // Resolve contributor from session — null means unauthenticated visitor
+  const contributorId = session?.user?.id || null;
 
   const logEntry = {
     id: 'l' + Date.now(),
@@ -231,3 +236,4 @@ export async function deleteLogEntry(instrumentId, logEntryId) {
   persist();
   return inst;
 }
+
