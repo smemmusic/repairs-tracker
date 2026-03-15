@@ -17,7 +17,7 @@ export function showLoginScreen(onAuthenticated) {
     <div class="login-box">
       <div class="login-title">Repair Tracker</div>
       <div class="login-subtitle">SMEM</div>
-      <div class="login-note">Demo mode — password is <strong>smem</strong> for all users</div>
+      <div class="login-note">Demo mode — password is <strong>smem</strong> for all users.<br>All data is stored locally in your browser. Feel free to experiment.</div>
       <div class="login-form">
         <div class="login-field">
           <label class="login-label">User</label>
