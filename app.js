@@ -19,6 +19,18 @@ function getSearchValue() {
   return document.getElementById('searchInput').value;
 }
 
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('visible'));
+  setTimeout(() => {
+    toast.classList.remove('visible');
+    setTimeout(() => toast.remove(), 300);
+  }, 2000);
+}
+
 async function refreshSidebar() {
   const instruments = await api.listInstruments(store.get('activeFilter'), getSearchValue());
   renderInstrumentList(instruments, store.get('selectedId'), selectInstrument);
@@ -76,32 +88,57 @@ async function selectInstrument(id) {
   renderLabelsStrip(inst);
   renderDisplayReadyBadge(raw);
   renderScoreStrip(inst, c, raw);
-  renderLog(inst, c);
+  renderLog(inst, c, c.deleteLogEntry ? onDeleteLogEntry : null);
 
-  // Form: show button, close panel, apply capabilities, restore draft or reset
-  form.showFormButton();
-  form.closeForm();
+  // Form setup
   form.configureStatusSelect(raw);
   form.clearStatusHint();
-  form.applyCapabilities(c);
 
-  const draft = store.getDraft(id);
-  if (draft) {
-    form.setFormValues(draft);
-    store.set('pendingLabels', { ...draft.pendingLabels });
-    store.set('stagedFiles', [...draft.stagedFiles]);
-    form.renderAttachPreview(store.get('stagedFiles'), removeStagedFile);
-    form.renderLabelsFormRow(raw, store.get('pendingLabels'), onLabelToggle);
-    updateDisplayReadyPreview();
-    document.getElementById('submitBtn').disabled = !draft.type;
-    if (draft.formOpen) form.openForm();
-  } else {
+  const isGuest = !c.submitOtherEntryTypes;
+
+  if (isGuest) {
+    // Guests go straight to a locked fault_report form — no toggle needed
+    document.getElementById('addLogBtn').style.display = 'none';
+    form.openForm();
     form.resetForm(raw);
     store.set('pendingLabels', {});
     store.set('stagedFiles', []);
     form.renderAttachPreview([], removeStagedFile);
-    form.renderLabelsFormRow(raw, {}, onLabelToggle);
-    updateDisplayReadyPreview();
+
+    // Pre-fill and trigger inference
+    document.getElementById('entryType').value = 'fault_report';
+    document.getElementById('submitBtn').disabled = false;
+    await reInferLabels();
+
+    // Labels are read-only for guests — re-render without toggle callback
+    form.renderLabelsFormRow(raw, store.get('pendingLabels'), null);
+
+    // Apply capabilities last — locks type, status, date after everything is set
+    form.applyCapabilities(c);
+  } else {
+    // Authenticated: normal flow with toggle and draft restore
+    form.showFormButton();
+    form.closeForm();
+
+    const draft = store.getDraft(id);
+    if (draft) {
+      form.setFormValues(draft);
+      store.set('pendingLabels', { ...draft.pendingLabels });
+      store.set('stagedFiles', [...draft.stagedFiles]);
+      form.renderAttachPreview(store.get('stagedFiles'), removeStagedFile);
+      form.renderLabelsFormRow(raw, store.get('pendingLabels'), onLabelToggle);
+      updateDisplayReadyPreview();
+      document.getElementById('submitBtn').disabled = !draft.type;
+      if (draft.formOpen) form.openForm();
+    } else {
+      form.resetForm(raw);
+      store.set('pendingLabels', {});
+      store.set('stagedFiles', []);
+      form.renderAttachPreview([], removeStagedFile);
+      form.renderLabelsFormRow(raw, {}, onLabelToggle);
+      updateDisplayReadyPreview();
+    }
+    form.applyCapabilities(c);
   }
 }
 
@@ -116,20 +153,19 @@ async function addEntry() {
     return;
   }
 
-  // Compute effective changes
-  const c = caps();
+  // Compute effective changes — send everything, backend enforces permissions
   const terminal = raw.status === 'retired' || raw.status === 'disposed';
-  const effectiveStatus = (c.setStatus && !terminal && values.status && values.status !== raw.status)
+  const effectiveStatus = (!terminal && values.status && values.status !== raw.status)
     ? values.status : null;
   const currentScore = getScore(raw);
-  const effectiveScore = (c.viewScores && values.score && parseInt(values.score) !== currentScore)
+  const effectiveScore = (values.score && parseInt(values.score) !== currentScore)
     ? parseInt(values.score) : null;
 
   // Collect label changes from pending
   const pendingLabels = store.get('pendingLabels');
   const labelsAdded = [];
   const labelsRemoved = [];
-  if (c.setLabels) {
+  {
     Object.entries(pendingLabels).forEach(([key, action]) => {
       if (action === 'add' && !raw.labels.includes(key)) labelsAdded.push(key);
       if (action === 'remove') labelsRemoved.push(key);
@@ -153,11 +189,26 @@ async function addEntry() {
     return;
   }
 
-  // Clear form state
+  // Clear form state and reset DOM so stale values don't get re-saved as a draft
   store.set('stagedFiles', []);
   store.set('pendingLabels', {});
   store.clearDraft(id);
+  document.getElementById('entryType').value = '';
+  document.getElementById('entryNotes').value = '';
 
+  await selectInstrument(id);
+  showToast('Log entry saved');
+}
+
+async function onDeleteLogEntry(logEntryId) {
+  const id = store.get('selectedId');
+  if (!id) return;
+  try {
+    await api.deleteLogEntry(id, logEntryId);
+  } catch (e) {
+    alert(e.message);
+    return;
+  }
   await selectInstrument(id);
 }
 

@@ -78,8 +78,11 @@ export function applyCapabilities(capabilities) {
   const displayReadyGroup = document.getElementById('displayReadyGroup');
   const contributorGroup = document.getElementById('contributorGroup');
 
-  // Restrict entry types for guests
-  if (!capabilities.submitOtherEntryTypes) {
+  const isGuest = !capabilities.submitOtherEntryTypes;
+
+  // Entry type: locked to fault_report for guests
+  typeSelect.disabled = isGuest;
+  if (isGuest) {
     Array.from(typeSelect.options).forEach(opt => {
       if (opt.value && opt.value !== 'fault_report') {
         opt.disabled = true;
@@ -93,12 +96,24 @@ export function applyCapabilities(capabilities) {
     });
   }
 
-  // Hide status, score, labels, display-ready for guests
-  if (statusGroup) statusGroup.style.display = capabilities.setStatus ? '' : 'none';
+  // Status: visible but read-only for guests (shows inferred value)
+  const statusSelect = document.getElementById('entryNewStatus');
+  if (statusGroup) statusGroup.style.display = '';
+  if (isGuest) statusSelect.disabled = true;
+
+  // Date: read-only for guests
+  const dateInput = document.getElementById('entryDate');
+  if (dateInput) dateInput.disabled = isGuest;
+
+  // Score: hidden for guests
   if (scoreGroup) scoreGroup.style.display = capabilities.viewScores ? '' : 'none';
-  if (labelsGroup) labelsGroup.style.display = capabilities.setLabels ? '' : 'none';
+
+  // Labels: visible (rendered read-only by passing null onToggle callback)
+  if (labelsGroup) labelsGroup.style.display = '';
+
+  // Display-ready, contributor: hidden for guests
   if (displayReadyGroup) displayReadyGroup.style.display = capabilities.viewScores ? '' : 'none';
-  if (contributorGroup) contributorGroup.style.display = capabilities.submitOtherEntryTypes ? '' : 'none';
+  if (contributorGroup) contributorGroup.style.display = isGuest ? 'none' : '';
 }
 
 /**
@@ -174,39 +189,52 @@ export function flashNotesError() {
  * Render label toggle buttons in the form.
  * @param {Object} instrument - current instrument
  * @param {Object} pendingLabels - map of key → 'add'|'remove'
- * @param {Function} onToggle - callback(key, action) where action is 'add'|'remove'|'cancel'
+ * @param {Function|null} onToggle - callback(key, action), or null for read-only display
  */
 export function renderLabelsFormRow(instrument, pendingLabels, onToggle) {
   const row = document.getElementById('labelsFormRow');
   row.innerHTML = '';
+  const readOnly = !onToggle;
 
   LABELS.forEach(({ key, label, cls }) => {
     const onInstrument = instrument.labels.includes(key);
     const pending = pendingLabels[key];
 
+    // In read-only mode, only show labels that are active or pending
+    if (readOnly && !onInstrument && !pending) return;
+
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = `label-toggle ${cls}`;
+    if (readOnly) btn.style.cursor = 'default';
 
     if (onInstrument && pending !== 'remove') {
       btn.classList.add('active');
-      btn.textContent = '✕ ' + label;
-      btn.title = 'Click to remove this label';
-      btn.onclick = () => onToggle(key, 'remove');
+      btn.textContent = label;
+      if (!readOnly) {
+        btn.title = 'Click to remove this label';
+        btn.onclick = () => onToggle(key, 'remove');
+      }
     } else if (pending === 'remove') {
       btn.classList.add('active', 'remove');
       btn.textContent = label;
-      btn.title = 'Click to keep this label';
-      btn.onclick = () => onToggle(key, 'cancel');
+      if (!readOnly) {
+        btn.title = 'Click to keep this label';
+        btn.onclick = () => onToggle(key, 'cancel');
+      }
     } else if (pending === 'add') {
       btn.classList.add('active', 'add');
-      btn.textContent = '+ ' + label;
-      btn.title = 'Suggested — click to cancel';
-      btn.onclick = () => onToggle(key, 'cancel');
+      btn.textContent = label;
+      if (!readOnly) {
+        btn.title = 'Suggested — click to cancel';
+        btn.onclick = () => onToggle(key, 'cancel');
+      }
     } else {
-      btn.textContent = '+ ' + label;
-      btn.title = 'Click to add this label';
-      btn.onclick = () => onToggle(key, 'add');
+      btn.textContent = label;
+      if (!readOnly) {
+        btn.title = 'Click to add this label';
+        btn.onclick = () => onToggle(key, 'add');
+      }
     }
 
     row.appendChild(btn);

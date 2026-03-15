@@ -5,8 +5,9 @@ import { getContributorName } from '../data/api.js';
  * Render all log entries for an instrument.
  * @param {Object} instrument - the instrument with its log array
  * @param {Object} capabilities - current session capabilities
+ * @param {Function|null} onDelete - callback(logEntryId) when delete is clicked, null to hide delete buttons
  */
-export function renderLog(instrument, capabilities) {
+export function renderLog(instrument, capabilities, onDelete) {
   const area = document.getElementById('logEntries');
   area.innerHTML = '';
 
@@ -61,6 +62,9 @@ export function renderLog(instrument, capabilities) {
       ? getContributorName(entry.contributor_id)
       : (entry.author || 'Unknown');
 
+    const deleteBtn = (capabilities.deleteLogEntry && onDelete)
+      ? `<button class="log-delete-btn" data-id="${entry.id}" title="Delete entry">✕</button>` : '';
+
     const d = new Date(entry.date);
     const div = document.createElement('div');
     div.className = 'log-entry';
@@ -73,10 +77,16 @@ export function renderLog(instrument, capabilities) {
         <div class="log-top">
           <span class="entry-type-tag ${entry.type}">${entry.type.replace('_', ' ')}</span>
           ${statusTag}${labelTags}${scoreTag}${scoreDelta}
+          ${deleteBtn}
         </div>
         <div class="log-notes">${entry.notes}</div>
         ${attachHtml}
       </div>`;
+
+    if (capabilities.deleteLogEntry && onDelete) {
+      div.querySelector('.log-delete-btn').addEventListener('click', () => onDelete(entry.id));
+    }
+
     area.appendChild(div);
   });
 }

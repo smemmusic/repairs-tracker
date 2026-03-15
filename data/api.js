@@ -1,6 +1,7 @@
 import { instruments as seedData, contributors } from './seed.js';
 import { getScore, isDisplayReady } from '../domain/computed.js';
 import { getSession } from './auth.js';
+import { inferStatusSuggestion, inferLabelSuggestions } from '../domain/inference.js';
 
 // In-memory store backed by localStorage — will be replaced by fetch() calls to FastAPI
 import { STORAGE_KEY_INSTRUMENTS } from '../domain/constants.js';
@@ -100,20 +101,37 @@ export async function addLogEntry(instrumentId, entry) {
   const caps = session?.capabilities || {};
 
   // Permission enforcement
-  if (entry.type === 'fault_report' && !caps.submitFaultReport) {
+  const isFaultReport = entry.type === 'fault_report';
+  if (isFaultReport && !caps.submitFaultReport) {
     throw new Error('Permission denied: cannot submit fault reports');
   }
-  if (entry.type !== 'fault_report' && !caps.submitOtherEntryTypes) {
+  if (!isFaultReport && !caps.submitOtherEntryTypes) {
     throw new Error('Permission denied: login required for this entry type');
   }
-  if (entry.status && !caps.setStatus) {
+  if (entry.status && !caps.setStatus && !isFaultReport) {
     throw new Error('Permission denied: login required to set status');
   }
-  if ((entry.labelsAdded?.length || entry.labelsRemoved?.length) && !caps.setLabels) {
+  if ((entry.labelsAdded?.length || entry.labelsRemoved?.length) && !caps.setLabels && !isFaultReport) {
     throw new Error('Permission denied: login required to modify labels');
   }
 
   const inst = instruments.find(i => i.id === instrumentId);
+
+  // For fault reports from guests, override client-sent status/labels with server-inferred values
+  if (isFaultReport && (!caps.setStatus || !caps.setLabels)) {
+    const suggestedStatus = inferStatusSuggestion('fault_report', inst.status);
+    const suggestedLabels = inferLabelSuggestions('fault_report', suggestedStatus || inst.status, inst.labels);
+
+    if (!caps.setStatus) {
+      entry.status = suggestedStatus;
+    }
+    if (!caps.setLabels) {
+      entry.labelsAdded = Object.entries(suggestedLabels)
+        .filter(([, v]) => v === 'add').map(([k]) => k);
+      entry.labelsRemoved = Object.entries(suggestedLabels)
+        .filter(([, v]) => v === 'remove').map(([k]) => k);
+    }
+  }
   if (!inst) throw new Error(`Instrument not found: ${instrumentId}`);
 
   const terminal = inst.status === 'retired' || inst.status === 'disposed';
@@ -173,4 +191,43 @@ export async function addLogEntry(instrumentId, entry) {
   persist();
 
   return { instrument: inst, logEntry };
+}
+
+/**
+ * Delete a log entry and recompute instrument state from remaining entries.
+ * Returns the updated instrument.
+ */
+export async function deleteLogEntry(instrumentId, logEntryId) {
+  const session = await getSession();
+  const caps = session?.capabilities || {};
+
+  if (!caps.deleteLogEntry) {
+    throw new Error('Permission denied: login required to delete log entries');
+  }
+
+  const inst = instruments.find(i => i.id === instrumentId);
+  if (!inst) throw new Error(`Instrument not found: ${instrumentId}`);
+
+  const idx = inst.log.findIndex(e => e.id === logEntryId);
+  if (idx === -1) throw new Error(`Log entry not found: ${logEntryId}`);
+
+  inst.log.splice(idx, 1);
+
+  // Recompute status from log (replay)
+  let status = 'unknown';
+  for (const entry of inst.log) {
+    if (entry.status) status = entry.status;
+  }
+  inst.status = status;
+
+  // Recompute labels from log (replay)
+  const labels = new Set();
+  for (const entry of inst.log) {
+    for (const key of (entry.labels_added || [])) labels.add(key);
+    for (const key of (entry.labels_removed || [])) labels.delete(key);
+  }
+  inst.labels = [...labels];
+
+  persist();
+  return inst;
 }

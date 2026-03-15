@@ -100,6 +100,9 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 .entry-type-tag.cleaning     { color: var(--green); border-color: var(--green-dim); }
 .status-change-tag { font-family: var(--mono); font-size: 9px; padding: 2px 6px; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.06em; border: 1px solid; }
 .log-label-tag { font-family: var(--mono); font-size: 9px; padding: 2px 6px; border: 1px solid; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
+.log-delete-btn { font-family: var(--mono); font-size: 10px; color: var(--text3); background: none; border: 1px solid var(--border2); padding: 1px 6px; border-radius: 2px; cursor: pointer; margin-left: auto; opacity: 0; transition: all 0.12s; }
+.log-entry:hover .log-delete-btn { opacity: 1; }
+.log-delete-btn:hover { border-color: var(--red); color: var(--red); }
 .condition-change { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-left: auto; }
 .condition-change.up { color: var(--green); }
 .condition-change.down { color: var(--red); }
@@ -185,6 +188,10 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 .login-divider { text-align: center; font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 0.06em; }
 .login-divider span { background: var(--bg2); padding: 0 8px; }
 .login-error { font-family: var(--mono); font-size: 10px; color: var(--red); min-height: 14px; }
+
+/* Toast */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(8px); font-family: var(--mono); font-size: 11px; color: var(--green); background: var(--bg2); border: 1px solid var(--green-dim); padding: 8px 20px; border-radius: 2px; letter-spacing: 0.06em; opacity: 0; transition: opacity 0.3s, transform 0.3s; z-index: 300; pointer-events: none; }
+.toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }

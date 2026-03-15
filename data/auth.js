@@ -9,6 +9,7 @@ const AUTHENTICATED_CAPABILITIES = {
   submitOtherEntryTypes: true,
   setStatus: true,
   setLabels: true,
+  deleteLogEntry: true,
 };
 
 const GUEST_CAPABILITIES = {
@@ -18,6 +19,7 @@ const GUEST_CAPABILITIES = {
   submitOtherEntryTypes: false,
   setStatus: false,
   setLabels: false,
+  deleteLogEntry: false,
 };
 
 let currentSession = null;
