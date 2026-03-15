@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Synth Repair Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">Repair Tracker</div>
+      <div class="logo-sub">Synthesiser Museum — v0.3</div>
+    </div>
+    <div class="sidebar-search">
+      <input class="search-input" type="text" placeholder="Search instruments..." id="searchInput">
+    </div>
+    <div class="sidebar-filters" id="sidebarFilters"></div>
+    <div class="instrument-list" id="instrumentList"></div>
+  </div>
+
+  <div class="main">
+    <div class="main-header">
+      <div class="main-title-block">
+        <div class="instrument-title" id="instrTitle">—</div>
+        <div class="instrument-id" id="instrId">Select an instrument</div>
+      </div>
+      <a href="#" class="airtable-link" onclick="return false;">↗ Airtable</a>
+      <div id="displayReadyBadge"></div>
+      <div class="status-badge tag-unknown" id="statusBadge">unknown</div>
+    </div>
+
+    <div class="labels-strip" id="labelsStrip">
+      <span class="labels-empty">No active labels</span>
+    </div>
+
+    <div class="score-strip">
+      <div class="score-item">
+        <span class="score-lbl">Condition</span>
+        <div class="score-bar" id="scoreBar"></div>
+        <span class="score-val amber" id="scoreValue">—</span>
+      </div>
+      <div class="score-item">
+        <span class="score-lbl">Last entry</span>
+        <span class="score-val" id="lastEntry">—</span>
+      </div>
+      <div class="score-item">
+        <span class="score-lbl">Log entries</span>
+        <span class="score-val" id="entryCount">—</span>
+      </div>
+      <button class="add-log-btn" id="addLogBtn" style="display:none;">+ New entry</button>
+    </div>
+
+    <div class="log-area" id="logArea">
+      <div id="logEntries">
+        <div class="empty-state">← Select an instrument to view its log</div>
+      </div>
+
+      <div class="add-entry-panel" id="addEntryPanel">
+        <div class="add-entry-header">
+          <div class="add-entry-title">New log entry</div>
+        </div>
+        <div class="add-entry-form">
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <select class="form-select" id="entryType">
+              <option value="">— select type —</option>
+              <option value="fault_report">Fault report</option>
+              <option value="assessment">Assessment</option>
+              <option value="repair">Repair</option>
+              <option value="cleaning">Cleaning</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status
+              <span id="statusHint" style="font-size:9px;opacity:0;transition:opacity 0.15s;"></span>
+            </label>
+            <select class="form-select" id="entryNewStatus">
+              <option value="unknown">Unknown</option>
+              <option value="broken">Broken</option>
+              <option value="working">Working</option>
+              <option value="retired">Retired</option>
+              <option value="disposed">Disposed</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Condition score</label>
+            <select class="form-select" id="entryScore">
+              <option value="1">1 — non-functional</option>
+              <option value="2">2</option><option value="3">3</option><option value="4">4</option>
+              <option value="5">5 — partial</option>
+              <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option>
+              <option value="10">10 — excellent</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input class="form-input" type="date" id="entryDate">
+          </div>
+          <!-- Labels row -->
+          <div class="form-group full" id="labelsFormGroup">
+            <label class="form-label">Labels</label>
+            <div id="labelsFormRow" style="display:flex;gap:6px;flex-wrap:wrap;min-height:28px;align-items:center;"></div>
+          </div>
+          <!-- Display ready preview -->
+          <div class="form-group full">
+            <label class="form-label">Display ready after this entry</label>
+            <div id="displayReadyPreview" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;min-height:24px;"></div>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Attachments</label>
+            <div>
+              <input type="file" class="attach-input" id="entryFiles" multiple accept="image/*,.pdf,.doc,.docx">
+              <button type="button" class="attach-btn">+ Add files</button>
+              <div class="attach-preview" id="attachPreview"></div>
+            </div>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Notes</label>
+            <textarea class="form-textarea" id="entryNotes" placeholder="Describe the work done, findings, or next steps…"></textarea>
+          </div>
+          <div class="form-group full" style="display:flex;justify-content:flex-end;">
+            <button class="submit-btn" id="submitBtn" disabled>Log entry</button>
+          </div>
+        </div>
+      </div><!-- /add-entry-panel -->
+
+    </div><!-- /log-area -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<div class="modal-overlay" id="statusModal">
+  <div class="modal">
+    <div class="modal-title">Change unit status</div>
+    <div id="statusOptions"></div>
+    <button class="modal-close">Cancel</button>
+  </div>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

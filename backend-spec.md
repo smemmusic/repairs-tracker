@@ -246,6 +246,7 @@ flowchart TD
     Assessment -->|"resulting status = working<br>+ needs_repair present"| RemRepair["-needs_repair"]
 
     Repair -->|"resulting status = working<br>+ needs_repair present"| RemRepair2["-needs_repair"]
+    Repair -->|"resulting status = working<br>+ needs_investigation present"| RemInv["-needs_investigation"]
 
     Cleaning -->|"needs_cleaning present"| RemCleaning["-needs_cleaning"]
 ```
@@ -269,8 +270,10 @@ flowchart TD
 | `assessment` | `working` | `needs_repair` not present | — no change — |
 | `repair` | `unknown` | — | — no change — |
 | `repair` | `broken` | — | — no change — |
-| `repair` | `working` | `needs_repair` present | suggest `-needs_repair` |
-| `repair` | `working` | `needs_repair` not present | — no change — |
+| `repair` | `working` | `needs_repair` present, `needs_investigation` present | suggest `-needs_repair`, `-needs_investigation` |
+| `repair` | `working` | `needs_repair` present, `needs_investigation` not present | suggest `-needs_repair` |
+| `repair` | `working` | `needs_repair` not present, `needs_investigation` present | suggest `-needs_investigation` |
+| `repair` | `working` | `needs_repair` not present, `needs_investigation` not present | — no change — |
 | `cleaning` | `unknown` | `needs_cleaning` present | suggest `-needs_cleaning` |
 | `cleaning` | `unknown` | `needs_cleaning` not present | — no change — |
 | `cleaning` | `broken` | `needs_cleaning` present | suggest `-needs_cleaning` |
