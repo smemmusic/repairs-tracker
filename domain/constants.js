@@ -24,6 +24,7 @@ export const EntryType = Object.freeze({
   REPAIR:       'repair',
   CLEANING:     'cleaning',
   FAULT_REPORT: 'fault_report',
+  OTHER:        'other',
 });
 
 export const Label = Object.freeze({
@@ -47,6 +48,14 @@ export const Filter = Object.freeze({
 
 
 // ── Metadata ─────────────────────────────────────────────────────────
+
+export const ENTRY_TYPES = [
+  { key: EntryType.FAULT_REPORT, label: 'Fault report' },
+  { key: EntryType.ASSESSMENT,   label: 'Assessment' },
+  { key: EntryType.REPAIR,       label: 'Repair' },
+  { key: EntryType.CLEANING,     label: 'Cleaning' },
+  { key: EntryType.OTHER,        label: 'Other' },
+];
 
 export const STATUSES = [
   { key: Status.UNKNOWN,  label: 'Unknown',  desc: 'Condition not yet assessed' },

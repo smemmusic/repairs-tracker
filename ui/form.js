@@ -1,6 +1,30 @@
-import { LABELS, Status, EntryType, LabelAction } from '../domain/constants.js';
+import { LABELS, STATUSES, ENTRY_TYPES, Status, EntryType, LabelAction } from '../domain/constants.js';
 import { getScore, getDisplayReadyChecks } from '../domain/computed.js';
 import { displayReadyBadgeHTML, esc } from './shared.js';
+
+/**
+ * Populate the entry type and status selects from constants.
+ * Call once at startup.
+ */
+export function initFormSelects() {
+  const typeSelect = document.getElementById('entryType');
+  typeSelect.innerHTML = '<option value="">\u2014 select type \u2014</option>';
+  ENTRY_TYPES.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.key;
+    opt.textContent = t.label;
+    typeSelect.appendChild(opt);
+  });
+
+  const statusSelect = document.getElementById('entryNewStatus');
+  statusSelect.innerHTML = '';
+  STATUSES.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.key;
+    opt.textContent = s.label;
+    statusSelect.appendChild(opt);
+  });
+}
 
 /**
  * Open the entry form panel and update button text.

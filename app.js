@@ -400,6 +400,9 @@ async function startApp(session) {
   // Show the app
   document.getElementById('app').classList.remove('hidden');
 
+  // Populate form selects from constants
+  form.initFormSelects();
+
   // Render user info in sidebar
   renderUserInfo(session);
 

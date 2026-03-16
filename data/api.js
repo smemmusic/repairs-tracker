@@ -110,6 +110,7 @@ export async function addLogEntry(instrumentId, entry) {
   }
 
   const inst = instruments.find(i => i.id === instrumentId);
+  if (!inst) throw new Error(`Instrument not found: ${instrumentId}`);
 
   // For fault reports from guests, override client-sent status/labels with server-inferred values
   if (isFaultReport && (!caps.setStatus || !caps.setLabels)) {
@@ -125,7 +126,6 @@ export async function addLogEntry(instrumentId, entry) {
       entry.labelsRemoved = removed;
     }
   }
-  if (!inst) throw new Error(`Instrument not found: ${instrumentId}`);
 
   // Determine effective status change
   const effectiveStatus = (entry.status && entry.status !== inst.status)
