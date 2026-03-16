@@ -15,6 +15,10 @@ export function get(key) {
   return state[key];
 }
 
+export function caps() {
+  return state.session?.capabilities || {};
+}
+
 export function set(key, value) {
   state[key] = value;
 }

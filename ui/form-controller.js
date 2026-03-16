@@ -18,10 +18,6 @@ export function init({ selectInstrument, showToast }) {
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
-function caps() {
-  return store.get('session')?.capabilities || {};
-}
-
 // ── Display-Ready Preview ─────────────────────────────────────────────
 
 export async function updateDisplayReadyPreview() {

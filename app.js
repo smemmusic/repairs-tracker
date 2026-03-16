@@ -11,10 +11,6 @@ import { EntryType, Filter } from './domain/constants.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
-function caps() {
-  return store.get('session')?.capabilities || {};
-}
-
 function getSearchValue() {
   return document.getElementById('searchInput').value;
 }
@@ -64,7 +60,7 @@ async function selectInstrument(id) {
   document.getElementById('app').classList.add('instrument-selected');
   document.getElementById('backBtn').classList.remove('hidden');
 
-  const c = caps();
+  const c = store.caps();
 
   // Render detail panels
   await refreshSidebar();
