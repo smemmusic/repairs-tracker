@@ -199,7 +199,8 @@ async function startApp(session) {
     document.getElementById('dashToggleBtn').addEventListener('click', showDashboard);
   }
 
-  // Initial render
+  // Initial render — show dashboard first (on mobile this brings it to front)
+  document.getElementById('app').classList.add('dashboard-visible');
   renderFilters(onFilterChange);
   refreshSidebar();
   refreshDashboard();

@@ -15,8 +15,8 @@ export function renderDashboard(container, stats, feed, caps, onSelect, onBack) 
 
   // Mobile back button
   const backBtn = document.createElement('button');
-  backBtn.className = 'dash-back-btn back-btn';
-  backBtn.textContent = '\u2190';
+  backBtn.className = 'dash-back-btn btn-subtle';
+  backBtn.textContent = '\u2190 Browse instruments';
   backBtn.addEventListener('click', onBack);
   container.appendChild(backBtn);
 
