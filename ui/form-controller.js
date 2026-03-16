@@ -5,6 +5,7 @@ import { createAttachment } from '../domain/models.js';
 import { inferStatusSuggestion, inferLabelSuggestions } from '../domain/inference.js';
 import { LabelAction, partitionLabelActions } from '../domain/constants.js';
 import * as form from './form.js';
+import { confirmModal } from './shared.js';
 
 // ── Callbacks (set via init) ──────────────────────────────────────────
 
@@ -158,12 +159,14 @@ export async function onEditLogEntry(logEntryId) {
 export async function onDeleteLogEntry(logEntryId) {
   const id = store.get('selectedId');
   if (!id) return;
+  if (!await confirmModal('Delete this log entry? This cannot be undone.')) return;
   try {
     await api.deleteLogEntry(id, logEntryId);
   } catch (e) {
     alert(e.message);
     return;
   }
+  _showToast('Log entry deleted');
   await _selectInstrument(id);
 }
 
