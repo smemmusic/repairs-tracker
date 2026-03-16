@@ -1,6 +1,5 @@
-import { STATUSES, Filter } from '../domain/constants.js';
-import { getLabelDef } from '../domain/constants.js';
-import { isDisplayReady } from '../domain/computed.js';
+import { STATUSES, getLabelDef } from '../domain/config.js';
+import { Filter } from '../domain/constants.js';
 import { esc } from './shared.js';
 
 /**
@@ -55,9 +54,6 @@ function setActiveChip(el) {
 
 /**
  * Render the instrument list in the sidebar.
- * @param {Array} instruments - filtered list of instruments to display
- * @param {string|null} selectedId - currently selected instrument ID
- * @param {Function} onSelect - callback(instrumentId) when an instrument is clicked
  */
 export function renderInstrumentList(instruments, selectedId, onSelect) {
   const list = document.getElementById('instrumentList');
@@ -73,17 +69,15 @@ export function renderInstrumentList(instruments, selectedId, onSelect) {
       return def ? `<span class="label-tag label-tag-sm ${def.cls}">${def.label}</span>` : '';
     }).join('');
 
-    const displayReady = isDisplayReady(inst);
-
     div.innerHTML = `
       <div class="instrument-name">${esc(inst.display_name)}</div>
       <div class="instrument-serial">${inst.serial_number ? 'S/N ' + esc(inst.serial_number) : 'no serial'}</div>
       <div class="instrument-meta">
         <div class="status-dot s-${esc(inst.status)}"></div>
         <span class="status-label-small">${esc(inst.status)}</span>
-        <span class="entry-count">${inst.log.length}</span>
+        <span class="entry-count">${inst.log_count}</span>
       </div>
-      ${displayReady || inst.labels.length ? `<div class="label-pips">${displayReady ? '<span class="display-ready-tag-sm">display ready</span>' : ''}${labelPips}</div>` : ''}
+      ${inst.display_ready || inst.labels.length ? `<div class="label-pips">${inst.display_ready ? '<span class="display-ready-tag-sm">display ready</span>' : ''}${labelPips}</div>` : ''}
     `;
     list.appendChild(div);
   });

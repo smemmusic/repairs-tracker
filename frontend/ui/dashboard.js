@@ -1,14 +1,9 @@
-import { STATUSES, LABELS, DASHBOARD_NOTE_TRUNCATE } from '../domain/constants.js';
-import { getContributorName } from '../data/api.js';
+import { STATUSES, LABELS } from '../domain/config.js';
+import { DASHBOARD_NOTE_TRUNCATE } from '../domain/constants.js';
 import { esc } from './shared.js';
 
 /**
  * Render the dashboard into the given container.
- * @param {HTMLElement} container - the dashboard container element
- * @param {Object} stats - from getDashboardStats()
- * @param {Array} feed - from getRecentActivity()
- * @param {Object} caps - current session capabilities
- * @param {Function} onSelect - callback(instrumentId) to navigate to an instrument
  */
 export function renderDashboard(container, stats, feed, caps, onSelect, onBack) {
   container.innerHTML = '';
@@ -66,7 +61,7 @@ export function renderDashboard(container, stats, feed, caps, onSelect, onBack) 
 
       const d = new Date(entry.date);
       const dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-      const author = entry.contributor_id ? getContributorName(entry.contributor_id) : 'Visitor';
+      const author = entry.contributor_name || 'Visitor';
       const notes = entry.notes.length > DASHBOARD_NOTE_TRUNCATE
         ? entry.notes.slice(0, DASHBOARD_NOTE_TRUNCATE) + '...'
         : entry.notes;

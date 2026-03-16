@@ -1,5 +1,4 @@
 import { Filter } from '../domain/constants.js';
-import { createDraft } from '../domain/models.js';
 
 const state = {
   session: null,       // { user, capabilities } from auth
@@ -9,6 +8,7 @@ const state = {
   stagedFiles: [],     // array of { name, type, url }
   drafts: {},          // map of instrument id → draft object
   editingEntryId: null, // log entry ID being edited, or null
+  currentInstrument: null, // cached instrument from last selectInstrument
 };
 
 export function get(key) {
@@ -33,7 +33,11 @@ export function saveDraft(id, formValues) {
     delete state.drafts[id];
     return;
   }
-  state.drafts[id] = createDraft(formValues, state.pendingLabels, state.stagedFiles);
+  state.drafts[id] = {
+    ...formValues,
+    pendingLabels: { ...state.pendingLabels },
+    stagedFiles: [...state.stagedFiles],
+  };
 }
 
 /**

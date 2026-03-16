@@ -1,13 +1,8 @@
-import { getLabelDef } from '../domain/constants.js';
-import { getContributorName } from '../data/api.js';
+import { getLabelDef } from '../domain/config.js';
 import { esc } from './shared.js';
 
 /**
  * Render all log entries for an instrument.
- * @param {Object} instrument - the instrument with its log array
- * @param {Object} capabilities - current session capabilities
- * @param {Function|null} onEdit - callback(logEntryId) when edit is clicked
- * @param {Function|null} onDelete - callback(logEntryId) when delete is clicked
  */
 export function renderLog(instrument, capabilities, onEdit, onDelete) {
   const area = document.getElementById('logEntries');
@@ -53,10 +48,7 @@ export function renderLog(instrument, capabilities, onEdit, onDelete) {
       }
     }).join('')}</div>` : '';
 
-    // Resolve contributor name — null means visitor
-    const authorName = entry.contributor_id
-      ? getContributorName(entry.contributor_id)
-      : 'Visitor';
+    const authorName = entry.contributor_name || 'Visitor';
 
     const editBtn = (capabilities.editLogEntry && onEdit)
       ? `<button class="log-action-btn log-edit-btn" title="Edit entry">✎</button>` : '';

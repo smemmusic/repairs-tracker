@@ -6,19 +6,19 @@ import { APP_NAME, DEMO_PASSWORD } from '../domain/constants.js';
  * Render and show the login overlay.
  * @param {Function} onAuthenticated - callback(session) after successful login or guest entry
  */
-export function showLoginScreen(onAuthenticated) {
+export async function showLoginScreen(onAuthenticated) {
   const overlay = document.getElementById('loginOverlay');
-  const users = getLoginUsers();
+  const users = await getLoginUsers();
 
   const userOptions = '<option value="">— select user —</option>' + users.map(u =>
-    `<option value="${u.drupal_user_id}">${u.name}</option>`
+    `<option value="${u.id}">${u.name}</option>`
   ).join('');
 
   overlay.innerHTML = `
     <div class="login-box">
       <div class="login-title">Repair Tracker</div>
       <div class="login-subtitle">${APP_NAME}</div>
-      <div class="login-note">Demo mode — password is <strong>${DEMO_PASSWORD}</strong> for all users.<br>All data is stored locally in your browser. Feel free to experiment.</div>
+      <div class="login-note">Demo mode — password is <strong>${DEMO_PASSWORD}</strong> for all users.<br>All data is stored on the server. Feel free to experiment.</div>
       <div class="login-form">
         <div class="login-field">
           <label class="login-label">User</label>

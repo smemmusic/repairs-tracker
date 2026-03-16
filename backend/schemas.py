@@ -1,4 +1,4 @@
-from datetime import date
+import datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -67,8 +67,9 @@ class LoginUser(BaseModel):
 class LogEntryResponse(BaseModel):
     id: str
     type: EntryType
-    date: date
+    date: datetime.date
     contributor_id: Optional[str] = None
+    contributor_name: Optional[str] = None
     notes: str
     status: Optional[InstrumentStatus] = None
     score: Optional[int] = None
@@ -80,7 +81,7 @@ class LogEntryResponse(BaseModel):
 
 class AddLogEntryRequest(BaseModel):
     type: EntryType
-    date: Optional[date] = None
+    date: Optional[datetime.date] = None
     notes: str
     status: Optional[InstrumentStatus] = None
     score: Optional[int] = Field(default=None, ge=1, le=10)
@@ -114,6 +115,7 @@ class InstrumentSummary(BaseModel):
     labels: list[LabelKey] = []
     location: Optional[str] = None
     display_ready: bool
+    log_count: int = 0
 
 
 class InstrumentDetail(InstrumentSummary):
@@ -142,7 +144,7 @@ class DashboardStats(BaseModel):
 class ActivityEntry(BaseModel):
     id: str
     type: EntryType
-    date: date
+    date: datetime.date
     contributor_id: Optional[str] = None
     contributor_name: Optional[str] = None
     notes: str

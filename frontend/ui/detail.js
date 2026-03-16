@@ -1,11 +1,8 @@
-import { getLabelDef } from '../domain/constants.js';
-import { getScore, getLocation, getDisplayReadyChecks } from '../domain/computed.js';
+import { getLabelDef, getDisplayReadyChecks } from '../domain/config.js';
 import { displayReadyBadgeHTML, esc } from './shared.js';
 
 /**
- * Render the instrument detail header (title, serial, location, status badge).
- * @param {Object} instrument - instrument (may be permission-filtered)
- * @param {Object} rawInstrument - instrument with full log (for location)
+ * Render the instrument detail header (title, serial, status badge).
  */
 export function renderDetailHeader(instrument) {
   document.getElementById('instrTitle').textContent = instrument.display_name;
@@ -19,11 +16,9 @@ export function renderDetailHeader(instrument) {
 
 /**
  * Render the location strip.
- * @param {Object} rawInstrument - instrument with full log (for location derivation)
  */
-export function renderLocationStrip(rawInstrument) {
-  const location = getLocation(rawInstrument);
-  document.getElementById('locationValue').textContent = location || '—';
+export function renderLocationStrip(instrument) {
+  document.getElementById('locationValue').textContent = instrument.location || '—';
 }
 
 /**
@@ -55,13 +50,9 @@ export function renderLabelsStrip(instrument) {
 
 /**
  * Render the score bar and related stats.
- * @param {Object} instrument - instrument (may have empty log if guest)
- * @param {Object} capabilities - current session capabilities
- * @param {Object} rawInstrument - instrument with full log (for score/stats even when log is hidden)
  */
-export function renderScoreStrip(instrument, capabilities, rawInstrument) {
-  const src = rawInstrument || instrument;
-  const score = capabilities.viewScores ? getScore(src) : null;
+export function renderScoreStrip(instrument, capabilities) {
+  const score = capabilities.viewScores ? instrument.score : null;
 
   // Score bar
   const bar = document.getElementById('scoreBar');
@@ -79,13 +70,13 @@ export function renderScoreStrip(instrument, capabilities, rawInstrument) {
   }
 
   // Last entry date
-  const last = src.log[src.log.length - 1];
+  const last = instrument.log[instrument.log.length - 1];
   document.getElementById('lastEntry').textContent = last
     ? new Date(last.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
     : '—';
 
   // Entry count
-  document.getElementById('entryCount').textContent = src.log.length;
+  document.getElementById('entryCount').textContent = instrument.log_count;
 }
 
 /**
@@ -94,7 +85,6 @@ export function renderScoreStrip(instrument, capabilities, rawInstrument) {
 export function renderDisplayReadyBadge(instrument) {
   const el = document.getElementById('displayReadyBadge');
   if (!el) return;
-  const score = getScore(instrument);
-  const checks = getDisplayReadyChecks(instrument.status, instrument.labels, score);
+  const checks = getDisplayReadyChecks(instrument.status, instrument.labels, instrument.score);
   el.innerHTML = displayReadyBadgeHTML(checks);
 }

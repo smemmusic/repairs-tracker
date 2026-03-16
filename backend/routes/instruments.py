@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
 
 from database import get_db
-from models import Instrument, LogEntry
+from models import Instrument, LogEntry, Contributor
 from computed import get_instrument_state
 from permissions import filter_log_for_view
 from routes.auth import get_session_data
@@ -13,12 +13,20 @@ from schemas import (
 router = APIRouter(prefix="/instruments", tags=["instruments"])
 
 
-def build_log_entry_response(entry: LogEntry, caps: Capabilities) -> LogEntryResponse:
+def _resolve_contributor_name(db: Session, contributor_id: str | None) -> str | None:
+    if not contributor_id:
+        return None
+    contributor = db.get(Contributor, contributor_id)
+    return contributor.name if contributor else None
+
+
+def build_log_entry_response(db: Session, entry: LogEntry, caps: Capabilities) -> LogEntryResponse:
     return LogEntryResponse(
         id=entry.id,
         type=entry.entry_type,
         date=entry.performed_at,
         contributor_id=entry.contributor_id,
+        contributor_name=_resolve_contributor_name(db, entry.contributor_id),
         notes=entry.notes,
         status=entry.status,
         score=entry.condition_score if caps.viewScores else None,
@@ -49,12 +57,16 @@ def build_instrument_detail(db: Session, instrument: Instrument, caps: Capabilit
         labels=state.labels,
         location=state.location,
         display_ready=state.display_ready,
-        log=[build_log_entry_response(e, caps) for e in filtered],
+        log_count=len(entries),
+        log=[build_log_entry_response(db, e, caps) for e in filtered],
     )
 
 
 def build_instrument_summary(db: Session, instrument: Instrument) -> InstrumentSummary:
     state = get_instrument_state(db, instrument.id)
+    log_count = db.exec(
+        select(func.count()).where(LogEntry.instrument_id == instrument.id)
+    ).one()
     return InstrumentSummary(
         id=instrument.id,
         airtable_id=instrument.airtable_id,
@@ -65,6 +77,7 @@ def build_instrument_summary(db: Session, instrument: Instrument) -> InstrumentS
         labels=state.labels,
         location=state.location,
         display_ready=state.display_ready,
+        log_count=log_count,
     )
 
 

@@ -1,7 +1,5 @@
 import * as api from '../data/api.js';
 import * as store from '../state/store.js';
-import { getScore } from '../domain/computed.js';
-import { createAttachment } from '../domain/models.js';
 import { inferStatusSuggestion, inferLabelSuggestions } from '../domain/inference.js';
 import { LabelAction, partitionLabelActions } from '../domain/constants.js';
 import * as form from './form.js';
@@ -18,23 +16,26 @@ export function init({ selectInstrument, showToast }) {
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
+function getCurrentInstrument() {
+  return store.get('currentInstrument');
+}
+
 // ── Display-Ready Preview ─────────────────────────────────────────────
 
-export async function updateDisplayReadyPreview() {
-  const id = store.get('selectedId');
-  if (!id) return;
-  const raw = await api.getInstrumentUnfiltered(id);
+export function updateDisplayReadyPreview() {
+  const inst = getCurrentInstrument();
+  if (!inst) return;
   const type = document.getElementById('entryType').value;
   if (!type) {
     form.renderDisplayReadyPreview(null, null, []);
     return;
   }
 
-  const projectedStatus = document.getElementById('entryNewStatus').value || raw.status;
+  const projectedStatus = document.getElementById('entryNewStatus').value || inst.status;
   const scoreVal = document.getElementById('entryScore').value;
-  const projectedScore = scoreVal ? parseInt(scoreVal) : getScore(raw);
+  const projectedScore = scoreVal ? parseInt(scoreVal) : inst.score;
   const pendingLabels = store.get('pendingLabels');
-  const projectedLabels = [...raw.labels];
+  const projectedLabels = [...inst.labels];
   Object.entries(pendingLabels).forEach(([key, action]) => {
     if (action === LabelAction.ADD && !projectedLabels.includes(key)) projectedLabels.push(key);
     if (action === LabelAction.REMOVE) {
@@ -51,7 +52,7 @@ export async function updateDisplayReadyPreview() {
 export async function submitEntry() {
   const id = store.get('selectedId');
   if (!id) return;
-  const raw = await api.getInstrumentUnfiltered(id);
+  const inst = getCurrentInstrument();
   const editingId = store.get('editingEntryId');
 
   const values = form.readFormValues();
@@ -81,10 +82,9 @@ export async function submitEntry() {
     _showToast('Log entry updated');
   } else {
     // Create mode — add new entry
-    const effectiveStatus = (values.status && values.status !== raw.status)
+    const effectiveStatus = (values.status && values.status !== inst.status)
       ? values.status : null;
-    const currentScore = getScore(raw);
-    const effectiveScore = (values.score && parseInt(values.score) !== currentScore)
+    const effectiveScore = (values.score && parseInt(values.score) !== inst.score)
       ? parseInt(values.score) : null;
 
     const { added: labelsAdded, removed: labelsRemoved } = partitionLabelActions(store.get('pendingLabels'));
@@ -99,7 +99,7 @@ export async function submitEntry() {
         location: values.location || null,
         labelsAdded,
         labelsRemoved,
-        attachments: store.get('stagedFiles').map(f => createAttachment(f)),
+        attachments: store.get('stagedFiles'),
       });
     } catch (e) {
       alert(e.message);
@@ -125,15 +125,15 @@ export async function submitEntry() {
 export async function onEditLogEntry(logEntryId) {
   const id = store.get('selectedId');
   if (!id) return;
-  const raw = await api.getInstrumentUnfiltered(id);
-  const entry = raw.log.find(e => e.id === logEntryId);
+  const inst = getCurrentInstrument();
+  const entry = inst.log.find(e => e.id === logEntryId);
   if (!entry) return;
 
   // Pre-fill the form with the entry's values
   store.set('editingEntryId', logEntryId);
   form.setFormValues({
     type: entry.type,
-    status: entry.status || raw.status,
+    status: entry.status || inst.status,
     score: entry.score ? String(entry.score) : '',
     date: entry.date,
     location: entry.location || '',
@@ -168,11 +168,10 @@ export async function onDeleteLogEntry(logEntryId) {
 
 // ── Form Event Handlers ──────────────────────────────────────────────
 
-export async function reInferLabels({ labelToggle } = {}) {
+export function reInferLabels({ labelToggle } = {}) {
   const toggleCb = labelToggle !== undefined ? labelToggle : onLabelToggle;
-  const id = store.get('selectedId');
-  if (!id) return;
-  const raw = await api.getInstrumentUnfiltered(id);
+  const inst = getCurrentInstrument();
+  if (!inst) return;
   const type = document.getElementById('entryType').value;
   const statusSelect = document.getElementById('entryNewStatus');
 
@@ -180,20 +179,20 @@ export async function reInferLabels({ labelToggle } = {}) {
   statusSelect.disabled = !type;
 
   if (!type) {
-    statusSelect.value = raw.status;
+    statusSelect.value = inst.status;
     form.clearStatusHint();
     store.set('pendingLabels', {});
-    form.renderLabelsFormRow(raw, {}, toggleCb);
+    form.renderLabelsFormRow(inst, {}, toggleCb);
     updateDisplayReadyPreview();
     return;
   }
 
   // Reset status to instrument's current before inferring
-  statusSelect.value = raw.status;
+  statusSelect.value = inst.status;
   form.clearStatusHint();
 
   // Infer status suggestion
-  const suggestedStatus = inferStatusSuggestion(type, raw.status);
+  const suggestedStatus = inferStatusSuggestion(type, inst.status);
   if (suggestedStatus) {
     statusSelect.value = suggestedStatus;
     form.showStatusHint('\u2190 inferred', 'inferred');
@@ -201,21 +200,20 @@ export async function reInferLabels({ labelToggle } = {}) {
 
   // Infer label suggestions based on effective status
   const effectiveStatus = statusSelect.value;
-  const suggestions = inferLabelSuggestions(type, effectiveStatus, raw.labels);
+  const suggestions = inferLabelSuggestions(type, effectiveStatus, inst.labels);
   store.set('pendingLabels', suggestions);
-  form.renderLabelsFormRow(raw, suggestions, toggleCb);
+  form.renderLabelsFormRow(inst, suggestions, toggleCb);
   updateDisplayReadyPreview();
 }
 
-export async function onStatusChange() {
-  const id = store.get('selectedId');
-  if (!id) return;
-  const raw = await api.getInstrumentUnfiltered(id);
+export function onStatusChange() {
+  const inst = getCurrentInstrument();
+  if (!inst) return;
   const selected = document.getElementById('entryNewStatus').value;
   const type = document.getElementById('entryType').value;
 
-  if (selected !== raw.status) {
-    const suggestedStatus = type ? inferStatusSuggestion(type, raw.status) : null;
+  if (selected !== inst.status) {
+    const suggestedStatus = type ? inferStatusSuggestion(type, inst.status) : null;
     if (suggestedStatus && selected === suggestedStatus) {
       form.showStatusHint('\u2190 inferred', 'inferred');
     } else {
@@ -226,14 +224,14 @@ export async function onStatusChange() {
   }
 
   // Re-infer labels based on new effective status
-  const effectiveStatus = selected || raw.status;
-  const suggestions = type ? inferLabelSuggestions(type, effectiveStatus, raw.labels) : {};
+  const effectiveStatus = selected || inst.status;
+  const suggestions = type ? inferLabelSuggestions(type, effectiveStatus, inst.labels) : {};
   store.set('pendingLabels', suggestions);
-  form.renderLabelsFormRow(raw, suggestions, onLabelToggle);
+  form.renderLabelsFormRow(inst, suggestions, onLabelToggle);
   updateDisplayReadyPreview();
 }
 
-export async function onLabelToggle(key, action) {
+export function onLabelToggle(key, action) {
   const pendingLabels = { ...store.get('pendingLabels') };
   if (action === LabelAction.CANCEL) {
     delete pendingLabels[key];
@@ -245,8 +243,8 @@ export async function onLabelToggle(key, action) {
   if (store.get('editingEntryId')) {
     form.renderLabelsEditRow(pendingLabels, onLabelToggle);
   } else {
-    const raw = await api.getInstrumentUnfiltered(store.get('selectedId'));
-    form.renderLabelsFormRow(raw, pendingLabels, onLabelToggle);
+    const inst = getCurrentInstrument();
+    form.renderLabelsFormRow(inst, pendingLabels, onLabelToggle);
     updateDisplayReadyPreview();
   }
 }
@@ -256,7 +254,7 @@ export function onFilesSelected() {
   const stagedFiles = store.get('stagedFiles');
   for (const file of input.files) {
     const url = URL.createObjectURL(file);
-    stagedFiles.push(createAttachment({ name: file.name, type: file.type, url }));
+    stagedFiles.push({ name: file.name, type: file.type, url });
   }
   store.set('stagedFiles', stagedFiles);
   input.value = '';

@@ -8,7 +8,8 @@ import * as formController from './ui/form-controller.js';
 import { renderDashboard } from './ui/dashboard.js';
 import { showLoginScreen } from './ui/login.js';
 import { getSession, logout } from './data/auth.js';
-import { EntryType, Filter } from './domain/constants.js';
+import { loadConfig, EntryType } from './domain/config.js';
+import { Filter } from './domain/constants.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -59,8 +60,10 @@ async function selectInstrument(id) {
 
   store.set('selectedId', id);
   const inst = await api.getInstrument(id);
-  const raw = await api.getInstrumentUnfiltered(id);
   if (!inst) return;
+
+  // Cache the instrument for the form controller to use synchronously
+  store.set('currentInstrument', inst);
 
   // Show main content, hide empty state
   document.getElementById('mainEmptyState').classList.add('hidden');
@@ -74,10 +77,10 @@ async function selectInstrument(id) {
   // Render detail panels
   await refreshSidebar();
   renderDetailHeader(inst);
-  renderLocationStrip(raw);
+  renderLocationStrip(inst);
   renderLabelsStrip(inst);
-  renderDisplayReadyBadge(raw);
-  renderScoreStrip(inst, c, raw);
+  renderDisplayReadyBadge(inst);
+  renderScoreStrip(inst, c);
   renderLog(inst, c, c.editLogEntry ? formController.onEditLogEntry : null, c.deleteLogEntry ? formController.onDeleteLogEntry : null);
 
   // Form setup — clear any edit mode
@@ -92,7 +95,7 @@ async function selectInstrument(id) {
     // Guests go straight to a locked fault_report form — no toggle needed
     document.getElementById('addLogBar').classList.add('hidden');
     form.openForm();
-    form.resetForm(raw);
+    form.resetForm(inst);
     store.set('pendingLabels', {});
     store.set('stagedFiles', []);
     form.renderAttachPreview([], formController.removeStagedFile);
@@ -100,7 +103,7 @@ async function selectInstrument(id) {
     // Pre-fill and trigger inference (read-only — pass null callback to skip interactive render)
     document.getElementById('entryType').value = EntryType.FAULT_REPORT;
     document.getElementById('submitBtn').disabled = false;
-    await formController.reInferLabels({ labelToggle: null });
+    formController.reInferLabels({ labelToggle: null });
 
     // Apply capabilities last — locks type, status, date after everything is set
     form.applyCapabilities(c);
@@ -115,16 +118,16 @@ async function selectInstrument(id) {
       store.set('pendingLabels', { ...draft.pendingLabels });
       store.set('stagedFiles', [...draft.stagedFiles]);
       form.renderAttachPreview(store.get('stagedFiles'), formController.removeStagedFile);
-      form.renderLabelsFormRow(raw, store.get('pendingLabels'), formController.onLabelToggle);
+      form.renderLabelsFormRow(inst, store.get('pendingLabels'), formController.onLabelToggle);
       formController.updateDisplayReadyPreview();
       document.getElementById('submitBtn').disabled = !draft.type;
       if (draft.formOpen) form.openForm();
     } else {
-      form.resetForm(raw);
+      form.resetForm(inst);
       store.set('pendingLabels', {});
       store.set('stagedFiles', []);
       form.renderAttachPreview([], formController.removeStagedFile);
-      form.renderLabelsFormRow(raw, {}, formController.onLabelToggle);
+      form.renderLabelsFormRow(inst, {}, formController.onLabelToggle);
       formController.updateDisplayReadyPreview();
     }
     form.applyCapabilities(c);
@@ -215,6 +218,7 @@ function resetAppState() {
   store.get('stagedFiles').forEach(f => URL.revokeObjectURL(f.url));
   store.set('stagedFiles', []);
   store.set('editingEntryId', null);
+  store.set('currentInstrument', null);
 
   // Show empty state, hide main content
   document.getElementById('mainEmptyState').classList.remove('hidden');
@@ -233,20 +237,21 @@ function resetAppState() {
   document.getElementById('attachPreview').innerHTML = '';
 }
 
-function handleLogout() {
-  logout();
+async function handleLogout() {
+  await logout();
   resetAppState();
   document.getElementById('app').classList.add('hidden');
-  showLoginScreen(startApp);
+  await showLoginScreen(startApp);
 }
 
 // Check for existing session on page load
 async function boot() {
+  await loadConfig();
   const existing = await getSession();
   if (existing) {
     startApp(existing);
   } else {
-    showLoginScreen(startApp);
+    await showLoginScreen(startApp);
   }
 }
 

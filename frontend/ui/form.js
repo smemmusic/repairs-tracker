@@ -1,5 +1,5 @@
-import { LABELS, STATUSES, ENTRY_TYPES, Status, EntryType, LabelAction } from '../domain/constants.js';
-import { getScore, getDisplayReadyChecks } from '../domain/computed.js';
+import { LABELS, STATUSES, ENTRY_TYPES, Status, EntryType, getDisplayReadyChecks } from '../domain/config.js';
+import { LabelAction } from '../domain/constants.js';
 import { displayReadyBadgeHTML, esc } from './shared.js';
 
 /**
@@ -96,8 +96,6 @@ export function readFormValues() {
 
 /**
  * Apply capability restrictions to the form controls.
- * Hides/disables controls the user can't use.
- * @param {Object} capabilities - current session capabilities
  */
 export function applyCapabilities(capabilities) {
   const typeSelect = document.getElementById('entryType');
@@ -160,7 +158,7 @@ export function resetForm(instrument) {
   setFormValues({
     type: '',
     status: instrument.status,
-    score: getScore(instrument) ? String(getScore(instrument)) : '',
+    score: instrument.score ? String(instrument.score) : '',
     date: new Date().toISOString().split('T')[0],
     notes: '',
   });
@@ -196,9 +194,6 @@ export function flashNotesError() {
 
 /**
  * Render label toggle buttons in the form.
- * @param {Object} instrument - current instrument
- * @param {Object} pendingLabels - map of key → LabelAction
- * @param {Function|null} onToggle - callback(key, action), or null for read-only display
  */
 export function renderLabelsFormRow(instrument, pendingLabels, onToggle) {
   const row = document.getElementById('labelsFormRow');
@@ -209,7 +204,6 @@ export function renderLabelsFormRow(instrument, pendingLabels, onToggle) {
     const onInstrument = instrument.labels.includes(key);
     const pending = pendingLabels[key];
 
-    // In read-only mode, only show labels that are active or pending
     if (readOnly && !onInstrument && !pending) return;
 
     const btn = document.createElement('button');
@@ -251,15 +245,12 @@ export function renderLabelsFormRow(instrument, pendingLabels, onToggle) {
 }
 
 /**
- * Render label editor for edit mode — shows raw deltas (what this entry adds/removes).
- * @param {Object} pendingLabels - map of key → LabelAction
- * @param {Function} onToggle - callback(key, action)
+ * Render label editor for edit mode.
  */
 export function renderLabelsEditRow(pendingLabels, onToggle) {
   const row = document.getElementById('labelsFormRow');
   row.innerHTML = '';
 
-  // "Added" section
   const addedLabel = document.createElement('span');
   addedLabel.className = 'labels-empty';
   addedLabel.textContent = 'Added:';
@@ -283,7 +274,6 @@ export function renderLabelsEditRow(pendingLabels, onToggle) {
     row.appendChild(btn);
   });
 
-  // Separator
   const sep = document.createElement('span');
   sep.className = 'labels-empty';
   sep.textContent = 'Removed:';
@@ -311,9 +301,6 @@ export function renderLabelsEditRow(pendingLabels, onToggle) {
 
 /**
  * Render the display-ready preview in the form.
- * @param {string} projectedStatus - status after this entry
- * @param {number|null} projectedScore - score after this entry
- * @param {Array} projectedLabels - labels after this entry
  */
 export function renderDisplayReadyPreview(projectedStatus, projectedScore, projectedLabels) {
   const container = document.getElementById('displayReadyPreview');
@@ -331,8 +318,6 @@ export function renderDisplayReadyPreview(projectedStatus, projectedScore, proje
 
 /**
  * Render attachment preview thumbnails in the form.
- * @param {Array} stagedFiles - array of { name, type, url }
- * @param {Function} onRemove - callback(index)
  */
 export function renderAttachPreview(stagedFiles, onRemove) {
   const container = document.getElementById('attachPreview');

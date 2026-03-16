@@ -81,7 +81,7 @@ def add_log_entry(
 
     return AddLogEntryResponse(
         instrument=build_instrument_detail(db, instrument, caps),
-        logEntry=build_log_entry_response(entry, caps),
+        logEntry=build_log_entry_response(db, entry, caps),
     )
 
 

@@ -7,7 +7,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from config import SECRET_KEY, UPLOAD_DIR
 from database import create_db
-from routes import auth, instruments, log_entries, dashboard, attachments, config
+from routes import auth, instruments, log_entries, dashboard, attachments, config, admin
 
 
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -30,10 +30,11 @@ app.include_router(log_entries.router, prefix="/api")
 app.include_router(dashboard.router, prefix="/api")
 app.include_router(attachments.router, prefix="/api")
 app.include_router(config.router, prefix="/api")
+app.include_router(admin.router, prefix="/api")
 
 # Serve uploaded files
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
-# Serve frontend static files (parent directory)
-frontend_dir = Path(__file__).resolve().parent.parent
+# Serve frontend static files
+frontend_dir = Path(__file__).resolve().parent.parent / "frontend"
 app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")
