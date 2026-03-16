@@ -138,7 +138,7 @@ export async function onEditLogEntry(logEntryId) {
   form.setFormValues({
     type: entry.type,
     status: entry.status || raw.status,
-    score: entry.score ? String(entry.score) : String(getScore(raw) || 5),
+    score: entry.score ? String(entry.score) : '',
     date: entry.date,
     location: entry.location || '',
     notes: entry.notes,
@@ -172,7 +172,8 @@ export async function onDeleteLogEntry(logEntryId) {
 
 // ── Form Event Handlers ──────────────────────────────────────────────
 
-export async function reInferLabels() {
+export async function reInferLabels({ labelToggle } = {}) {
+  const toggleCb = labelToggle !== undefined ? labelToggle : onLabelToggle;
   const id = store.get('selectedId');
   if (!id) return;
   const raw = await api.getInstrumentRaw(id);
@@ -186,7 +187,7 @@ export async function reInferLabels() {
     statusSelect.value = raw.status;
     form.clearStatusHint();
     store.set('pendingLabels', {});
-    form.renderLabelsFormRow(raw, {}, onLabelToggle);
+    form.renderLabelsFormRow(raw, {}, toggleCb);
     updateDisplayReadyPreview();
     return;
   }
@@ -206,7 +207,7 @@ export async function reInferLabels() {
   const effectiveStatus = statusSelect.value;
   const suggestions = inferLabelSuggestions(type, effectiveStatus, raw.labels);
   store.set('pendingLabels', suggestions);
-  form.renderLabelsFormRow(raw, suggestions, onLabelToggle);
+  form.renderLabelsFormRow(raw, suggestions, toggleCb);
   updateDisplayReadyPreview();
 }
 

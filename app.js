@@ -92,13 +92,10 @@ async function selectInstrument(id) {
     store.set('stagedFiles', []);
     form.renderAttachPreview([], formController.removeStagedFile);
 
-    // Pre-fill and trigger inference
+    // Pre-fill and trigger inference (read-only — pass null callback to skip interactive render)
     document.getElementById('entryType').value = EntryType.FAULT_REPORT;
     document.getElementById('submitBtn').disabled = false;
-    await formController.reInferLabels();
-
-    // Labels are read-only for guests — re-render without toggle callback
-    form.renderLabelsFormRow(raw, store.get('pendingLabels'), null);
+    await formController.reInferLabels({ labelToggle: null });
 
     // Apply capabilities last — locks type, status, date after everything is set
     form.applyCapabilities(c);

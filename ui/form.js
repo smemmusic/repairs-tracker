@@ -145,7 +145,7 @@ export function applyCapabilities(capabilities) {
 export function setFormValues(values) {
   document.getElementById('entryType').value = values.type || '';
   document.getElementById('entryNewStatus').value = values.status || Status.UNKNOWN;
-  document.getElementById('entryScore').value = values.score || '5';
+  document.getElementById('entryScore').value = values.score || '';
   document.getElementById('entryDate').value = values.date || new Date().toISOString().split('T')[0];
   document.getElementById('entryLocation').value = values.location || '';
   document.getElementById('entryNotes').value = values.notes || '';
@@ -160,7 +160,7 @@ export function resetForm(instrument) {
   setFormValues({
     type: '',
     status: instrument.status,
-    score: String(getScore(instrument) || 5),
+    score: getScore(instrument) ? String(getScore(instrument)) : '',
     date: new Date().toISOString().split('T')[0],
     notes: '',
   });
