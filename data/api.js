@@ -1,8 +1,8 @@
 import { instruments as seedData, contributors } from './seed.js';
 import { getScore, isDisplayReady } from '../domain/computed.js';
 import { getSession } from './auth.js';
-import { inferStatusSuggestion, inferLabelSuggestions } from '../domain/inference.js';
-import { STORAGE_KEY_INSTRUMENTS, Status, EntryType, Filter, partitionLabelActions } from '../domain/constants.js';
+import { authorizeAddEntry, enforceGuestOverrides, authorizeEditEntry, authorizeDeleteEntry, filterInstrumentView } from './permissions.js';
+import { STORAGE_KEY_INSTRUMENTS, Status, Filter } from '../domain/constants.js';
 import { createLogEntry } from '../domain/models.js';
 
 // In-memory store backed by localStorage — will be replaced by fetch() calls to FastAPI
@@ -69,13 +69,7 @@ export async function getInstrument(id) {
 
   const session = await getSession();
   const caps = session?.capabilities || {};
-
-  // Return a view of the instrument respecting permissions
-  if (!caps.viewLogHistory) {
-    return { ...inst, log: [] };
-  }
-
-  return inst;
+  return filterInstrumentView(inst, caps);
 }
 
 /**
@@ -94,38 +88,12 @@ export async function addLogEntry(instrumentId, entry) {
   const session = await getSession();
   const caps = session?.capabilities || {};
 
-  // Permission enforcement
-  const isFaultReport = entry.type === EntryType.FAULT_REPORT;
-  if (isFaultReport && !caps.submitFaultReport) {
-    throw new Error('Permission denied: cannot submit fault reports');
-  }
-  if (!isFaultReport && !caps.submitOtherEntryTypes) {
-    throw new Error('Permission denied: login required for this entry type');
-  }
-  if (entry.status && !caps.setStatus && !isFaultReport) {
-    throw new Error('Permission denied: login required to set status');
-  }
-  if ((entry.labelsAdded?.length || entry.labelsRemoved?.length) && !caps.setLabels && !isFaultReport) {
-    throw new Error('Permission denied: login required to modify labels');
-  }
+  authorizeAddEntry(entry, caps);
 
   const inst = instruments.find(i => i.id === instrumentId);
   if (!inst) throw new Error(`Instrument not found: ${instrumentId}`);
 
-  // For fault reports from guests, override client-sent status/labels with server-inferred values
-  if (isFaultReport && (!caps.setStatus || !caps.setLabels)) {
-    const suggestedStatus = inferStatusSuggestion(EntryType.FAULT_REPORT, inst.status);
-    const suggestedLabels = inferLabelSuggestions(EntryType.FAULT_REPORT, suggestedStatus || inst.status, inst.labels);
-
-    if (!caps.setStatus) {
-      entry.status = suggestedStatus;
-    }
-    if (!caps.setLabels) {
-      const { added, removed } = partitionLabelActions(suggestedLabels);
-      entry.labelsAdded = added;
-      entry.labelsRemoved = removed;
-    }
-  }
+  enforceGuestOverrides(entry, inst, caps);
 
   // Determine effective status change
   const effectiveStatus = (entry.status && entry.status !== inst.status)
@@ -208,9 +176,7 @@ export async function editLogEntry(instrumentId, logEntryId, updates) {
   const session = await getSession();
   const caps = session?.capabilities || {};
 
-  if (!caps.editLogEntry) {
-    throw new Error('Permission denied: login required to edit log entries');
-  }
+  authorizeEditEntry(caps);
 
   const inst = instruments.find(i => i.id === instrumentId);
   if (!inst) throw new Error(`Instrument not found: ${instrumentId}`);
@@ -238,9 +204,7 @@ export async function deleteLogEntry(instrumentId, logEntryId) {
   const session = await getSession();
   const caps = session?.capabilities || {};
 
-  if (!caps.deleteLogEntry) {
-    throw new Error('Permission denied: login required to delete log entries');
-  }
+  authorizeDeleteEntry(caps);
 
   const inst = instruments.find(i => i.id === instrumentId);
   if (!inst) throw new Error(`Instrument not found: ${instrumentId}`);
