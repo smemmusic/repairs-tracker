@@ -1,3 +1,6 @@
+// Demo auth — replaced by Drupal OAuth in production. Capabilities will be
+// issued server-side (e.g. JWT claims) rather than assembled client-side.
+
 import { contributors } from './seed.js';
 import { DEMO_PASSWORD, STORAGE_KEY_SESSION } from '../domain/constants.js';
 import { createSession, createCapabilities } from '../domain/models.js';

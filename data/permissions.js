@@ -1,3 +1,7 @@
+// Authorization logic — runs client-side in the prototype but must move to the
+// FastAPI backend in production. The frontend should only use capabilities for
+// UI adaptation (showing/hiding controls), never for enforcement.
+
 import { inferStatusSuggestion, inferLabelSuggestions } from '../domain/inference.js';
 import { EntryType, partitionLabelActions } from '../domain/constants.js';
 
