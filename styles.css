@@ -117,7 +117,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 /* ── Main ───────────────────────────────────────────────────────────── */
 
 .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); position: relative; }
-.main-empty-state { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: var(--fs-base); color: var(--text3); letter-spacing: 0.06em; z-index: 1; }
+.main-empty-state { display: flex; flex: 1; flex-direction: column; overflow-y: auto; font-family: var(--mono); font-size: var(--fs-base); color: var(--text3); letter-spacing: 0.06em; }
 .main-empty-state.hidden { display: none; }
 .main-content { display: none; flex: 1; flex-direction: column; overflow: hidden; }
 .main-content.visible { display: flex; }
@@ -330,6 +330,32 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 
 /* ── Mobile ─────────────────────────────────────────────────────────── */
 
+/* ── Dashboard ──────────────────────────────────────────────────────── */
+
+.dashboard { padding: var(--pad-main); }
+
+.dash-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-lg); margin-bottom: var(--sp-2xl); }
+.dash-stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--sp-lg); }
+.dash-stat-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--sp-sm); }
+.dash-stat-label { font-family: var(--mono); font-size: var(--fs-sm); color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; }
+.dash-stat-value { font-family: var(--mono); font-size: var(--fs-title); color: var(--text); }
+.dash-stat-detail { display: flex; flex-direction: column; gap: var(--sp-xs); }
+.dash-detail-item { font-family: var(--mono); font-size: var(--fs-sm); color: var(--text2); display: flex; align-items: center; gap: var(--sp-sm); }
+.dash-detail-item .status-dot { width: 6px; height: 6px; }
+
+.dash-feed-title { font-family: var(--mono); font-size: var(--fs-md); color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: var(--sp-lg); }
+.dash-feed-empty { font-family: var(--mono); font-size: var(--fs-md); color: var(--text3); padding: var(--sp-xl) 0; }
+
+.dash-feed-item { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; gap: 2px var(--sp-lg); padding: var(--sp-md) var(--sp-lg); border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg2); margin-bottom: var(--sp-md); cursor: pointer; transition: border-color 0.15s; }
+.dash-feed-item:hover { border-color: var(--amber-dim); }
+
+.dash-feed-meta { display: flex; flex-direction: column; gap: 1px; min-width: 70px; }
+.dash-feed-date { font-family: var(--mono); font-size: var(--fs-sm); color: var(--text2); }
+.dash-feed-author { font-family: var(--mono); font-size: var(--fs-xs); color: var(--text3); }
+.dash-feed-body { display: flex; align-items: center; gap: var(--sp-sm); flex-wrap: wrap; }
+.dash-feed-instrument { font-family: var(--mono); font-size: var(--fs-md); color: var(--amber); }
+.dash-feed-notes { grid-column: 2; font-family: var(--sans); font-size: var(--fs-md); color: var(--text2); line-height: 1.4; }
+
 @media (max-width: 768px) {
   :root { --pad-main: 16px; }
 
@@ -349,6 +375,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
   .log-author { margin-top: 0; }
   .add-entry-form { grid-template-columns: 1fr; }
   .login-box { width: 90%; max-width: 320px; padding: 24px; }
+  .dash-stats { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (min-width: 769px) {

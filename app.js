@@ -5,6 +5,7 @@ import { renderDetailHeader, renderLocationStrip, renderLabelsStrip, renderScore
 import { renderLog } from './ui/log.js';
 import * as form from './ui/form.js';
 import * as formController from './ui/form-controller.js';
+import { renderDashboard } from './ui/dashboard.js';
 import { showLoginScreen } from './ui/login.js';
 import { getSession, logout } from './data/auth.js';
 import { EntryType, Filter } from './domain/constants.js';
@@ -37,6 +38,13 @@ function showToast(message) {
 async function refreshSidebar() {
   const instruments = await api.listInstruments(store.get('activeFilter'), getSearchValue());
   renderInstrumentList(instruments, store.get('selectedId'), selectInstrument);
+}
+
+async function refreshDashboard() {
+  const stats = await api.getDashboardStats();
+  const feed = await api.getRecentActivity();
+  const c = store.caps();
+  renderDashboard(document.getElementById('dashboard'), stats, feed, c, selectInstrument);
 }
 
 // ── Core Actions ─────────────────────────────────────────────────────
@@ -122,13 +130,14 @@ async function selectInstrument(id) {
   }
 }
 
-function goBackToList() {
+async function goBackToList() {
   document.getElementById('app').classList.remove('instrument-selected');
   document.getElementById('backBtn').classList.add('hidden');
   document.getElementById('mainEmptyState').classList.remove('hidden');
   document.getElementById('mainContent').classList.remove('visible');
   store.set('selectedId', null);
   refreshSidebar();
+  await refreshDashboard();
 }
 
 async function onFilterChange(filterKey) {
@@ -174,11 +183,13 @@ async function startApp(session) {
     document.querySelector('.attach-btn').addEventListener('click', () => document.getElementById('entryFiles').click());
     document.getElementById('logoutBtn').addEventListener('click', handleLogout);
     document.getElementById('backBtn').addEventListener('click', goBackToList);
+    document.getElementById('logoBtn').addEventListener('click', goBackToList);
   }
 
   // Initial render
   renderFilters(onFilterChange);
   refreshSidebar();
+  refreshDashboard();
   document.getElementById('entryDate').value = new Date().toISOString().split('T')[0];
 }
 

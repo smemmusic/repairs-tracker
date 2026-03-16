@@ -17,7 +17,7 @@
 
   <div class="sidebar">
     <div class="sidebar-header">
-      <div class="logo">Repair Tracker</div>
+      <div class="logo" id="logoBtn" style="cursor:pointer;">Repair Tracker</div>
       <div class="logo-sub">SMEM — <span id="userInfo"></span> <button class="logout-btn btn-subtle" id="logoutBtn">Log out</button></div>
     </div>
     <div class="sidebar-search">
@@ -28,7 +28,9 @@
   </div>
 
   <div class="main">
-    <div class="main-empty-state" id="mainEmptyState">← Select an instrument</div>
+    <div class="main-empty-state" id="mainEmptyState">
+      <div class="dashboard" id="dashboard"></div>
+    </div>
     <div class="main-content" id="mainContent">
     <div class="main-header">
       <button class="back-btn hidden" id="backBtn">←</button>

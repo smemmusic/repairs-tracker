@@ -2,7 +2,7 @@ import { instruments as seedData, contributors } from './seed.js';
 import { getScore, isDisplayReady } from '../domain/computed.js';
 import { getSession } from './auth.js';
 import { authorizeAddEntry, enforceGuestOverrides, authorizeEditEntry, authorizeDeleteEntry, filterInstrumentView } from './permissions.js';
-import { STORAGE_KEY_INSTRUMENTS, Status, Filter } from '../domain/constants.js';
+import { STORAGE_KEY_INSTRUMENTS, Status, Label, Filter, DASHBOARD_FEED_LIMIT } from '../domain/constants.js';
 import { createLogEntry } from '../domain/models.js';
 
 // In-memory store backed by localStorage — will be replaced by fetch() calls to FastAPI
@@ -34,6 +34,45 @@ const instruments = loadInstruments();
 export function getContributorName(contributorId) {
   const c = contributors.find(c => c.id === contributorId);
   return c ? c.name : 'Unknown';
+}
+
+/**
+ * Aggregate dashboard statistics from all instruments.
+ */
+export async function getDashboardStats() {
+  const statusCounts = {};
+  for (const key of Object.values(Status)) statusCounts[key] = 0;
+  const labelCounts = {};
+  for (const key of Object.values(Label)) labelCounts[key] = 0;
+
+  let displayReady = 0;
+  let needsAttention = 0;
+
+  for (const inst of instruments) {
+    statusCounts[inst.status] = (statusCounts[inst.status] || 0) + 1;
+    if (isDisplayReady(inst)) displayReady++;
+    if (inst.labels.length > 0) needsAttention++;
+    for (const l of inst.labels) {
+      labelCounts[l] = (labelCounts[l] || 0) + 1;
+    }
+  }
+
+  return { total: instruments.length, statusCounts, labelCounts, displayReady, needsAttention };
+}
+
+/**
+ * Get recent log entries across all instruments, sorted by date descending.
+ * Each item includes instrumentId and instrumentName for navigation.
+ */
+export async function getRecentActivity(limit = DASHBOARD_FEED_LIMIT) {
+  const entries = [];
+  for (const inst of instruments) {
+    for (const entry of inst.log) {
+      entries.push({ ...entry, instrumentId: inst.id, instrumentName: inst.display_name });
+    }
+  }
+  entries.sort((a, b) => b.date.localeCompare(a.date));
+  return entries.slice(0, limit);
 }
 
 /**

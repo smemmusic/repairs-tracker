@@ -2,6 +2,10 @@ export const APP_NAME = 'SMEM';
 
 export const DISPLAY_READY_THRESHOLD = 7;
 
+// Dashboard
+export const DASHBOARD_FEED_LIMIT = 10;
+export const DASHBOARD_NOTE_TRUNCATE = 100;
+
 // Demo credentials — all seeded users share this password. Replaced by Drupal OAuth in production.
 export const DEMO_PASSWORD = 'smem';
 
