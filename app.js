@@ -51,7 +51,7 @@ async function selectInstrument(id) {
 
   store.set('selectedId', id);
   const inst = await api.getInstrument(id);
-  const raw = await api.getInstrumentRaw(id);
+  const raw = await api.getInstrumentUnfiltered(id);
   if (!inst) return;
 
   // Show main content, hide empty state

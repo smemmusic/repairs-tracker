@@ -73,9 +73,13 @@ export async function getInstrument(id) {
 }
 
 /**
- * Get the raw instrument without permission filtering (for internal use).
+ * Get the full instrument without permission filtering.
+ * @internal Used by form logic and detail rendering that need unfiltered
+ * state (scores, labels, location) to compute inferences and previews.
+ * On the production backend these callers become server-side logic and
+ * this function should NOT be exposed as a public API endpoint.
  */
-export async function getInstrumentRaw(id) {
+export async function getInstrumentUnfiltered(id) {
   return instruments.find(i => i.id === id) || null;
 }
 

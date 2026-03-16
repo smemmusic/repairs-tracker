@@ -23,7 +23,7 @@ export function init({ selectInstrument, showToast }) {
 export async function updateDisplayReadyPreview() {
   const id = store.get('selectedId');
   if (!id) return;
-  const raw = await api.getInstrumentRaw(id);
+  const raw = await api.getInstrumentUnfiltered(id);
   const type = document.getElementById('entryType').value;
   if (!type) {
     form.renderDisplayReadyPreview(null, null, []);
@@ -51,7 +51,7 @@ export async function updateDisplayReadyPreview() {
 export async function submitEntry() {
   const id = store.get('selectedId');
   if (!id) return;
-  const raw = await api.getInstrumentRaw(id);
+  const raw = await api.getInstrumentUnfiltered(id);
   const editingId = store.get('editingEntryId');
 
   const values = form.readFormValues();
@@ -125,7 +125,7 @@ export async function submitEntry() {
 export async function onEditLogEntry(logEntryId) {
   const id = store.get('selectedId');
   if (!id) return;
-  const raw = await api.getInstrumentRaw(id);
+  const raw = await api.getInstrumentUnfiltered(id);
   const entry = raw.log.find(e => e.id === logEntryId);
   if (!entry) return;
 
@@ -172,7 +172,7 @@ export async function reInferLabels({ labelToggle } = {}) {
   const toggleCb = labelToggle !== undefined ? labelToggle : onLabelToggle;
   const id = store.get('selectedId');
   if (!id) return;
-  const raw = await api.getInstrumentRaw(id);
+  const raw = await api.getInstrumentUnfiltered(id);
   const type = document.getElementById('entryType').value;
   const statusSelect = document.getElementById('entryNewStatus');
 
@@ -210,7 +210,7 @@ export async function reInferLabels({ labelToggle } = {}) {
 export async function onStatusChange() {
   const id = store.get('selectedId');
   if (!id) return;
-  const raw = await api.getInstrumentRaw(id);
+  const raw = await api.getInstrumentUnfiltered(id);
   const selected = document.getElementById('entryNewStatus').value;
   const type = document.getElementById('entryType').value;
 
@@ -245,7 +245,7 @@ export async function onLabelToggle(key, action) {
   if (store.get('editingEntryId')) {
     form.renderLabelsEditRow(pendingLabels, onLabelToggle);
   } else {
-    const raw = await api.getInstrumentRaw(store.get('selectedId'));
+    const raw = await api.getInstrumentUnfiltered(store.get('selectedId'));
     form.renderLabelsFormRow(raw, pendingLabels, onLabelToggle);
     updateDisplayReadyPreview();
   }
