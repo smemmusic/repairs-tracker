@@ -1,1 +1,17 @@
 .claude/settings.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# uv / venv
+backend/.venv/
+
+# Database
+backend/*.db
+
+# Uploads
+backend/uploads/
