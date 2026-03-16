@@ -10,8 +10,15 @@ import { esc } from './shared.js';
  * @param {Object} caps - current session capabilities
  * @param {Function} onSelect - callback(instrumentId) to navigate to an instrument
  */
-export function renderDashboard(container, stats, feed, caps, onSelect) {
+export function renderDashboard(container, stats, feed, caps, onSelect, onBack) {
   container.innerHTML = '';
+
+  // Mobile back button
+  const backBtn = document.createElement('button');
+  backBtn.className = 'dash-back-btn back-btn';
+  backBtn.textContent = '\u2190';
+  backBtn.addEventListener('click', onBack);
+  container.appendChild(backBtn);
 
   // Stats cards
   const statsRow = document.createElement('div');

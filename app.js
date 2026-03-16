@@ -44,7 +44,7 @@ async function refreshDashboard() {
   const stats = await api.getDashboardStats();
   const feed = await api.getRecentActivity();
   const c = store.caps();
-  renderDashboard(document.getElementById('dashboard'), stats, feed, c, selectInstrument);
+  renderDashboard(document.getElementById('dashboard'), stats, feed, c, selectInstrument, goBackToList);
 }
 
 // ── Core Actions ─────────────────────────────────────────────────────
@@ -66,6 +66,7 @@ async function selectInstrument(id) {
   document.getElementById('mainEmptyState').classList.add('hidden');
   document.getElementById('mainContent').classList.add('visible');
   document.getElementById('app').classList.add('instrument-selected');
+  document.getElementById('app').classList.remove('dashboard-visible');
   document.getElementById('backBtn').classList.remove('hidden');
 
   const c = store.caps();
@@ -132,6 +133,18 @@ async function selectInstrument(id) {
 
 async function goBackToList() {
   document.getElementById('app').classList.remove('instrument-selected');
+  document.getElementById('app').classList.remove('dashboard-visible');
+  document.getElementById('backBtn').classList.add('hidden');
+  document.getElementById('mainEmptyState').classList.remove('hidden');
+  document.getElementById('mainContent').classList.remove('visible');
+  store.set('selectedId', null);
+  refreshSidebar();
+  await refreshDashboard();
+}
+
+async function showDashboard() {
+  document.getElementById('app').classList.remove('instrument-selected');
+  document.getElementById('app').classList.add('dashboard-visible');
   document.getElementById('backBtn').classList.add('hidden');
   document.getElementById('mainEmptyState').classList.remove('hidden');
   document.getElementById('mainContent').classList.remove('visible');
@@ -183,7 +196,7 @@ async function startApp(session) {
     document.querySelector('.attach-btn').addEventListener('click', () => document.getElementById('entryFiles').click());
     document.getElementById('logoutBtn').addEventListener('click', handleLogout);
     document.getElementById('backBtn').addEventListener('click', goBackToList);
-    document.getElementById('logoBtn').addEventListener('click', goBackToList);
+    document.getElementById('dashToggleBtn').addEventListener('click', showDashboard);
   }
 
   // Initial render

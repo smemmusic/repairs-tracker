@@ -356,7 +356,14 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 .dash-feed-instrument { font-family: var(--mono); font-size: var(--fs-md); color: var(--amber); }
 .dash-feed-notes { grid-column: 2; font-family: var(--sans); font-size: var(--fs-md); color: var(--text2); line-height: 1.4; }
 
+.sidebar-dash-toggle { padding: var(--sp-md) var(--sp-lg); border-bottom: 1px solid var(--border); }
+.dash-toggle-btn { width: 100%; padding: var(--sp-md); text-transform: uppercase; }
+.dash-back-btn { display: none; }
+
 @media (max-width: 768px) {
+  .dash-back-btn { display: block; margin-bottom: var(--sp-lg); }
+  .app.dashboard-visible .sidebar { z-index: 10; }
+  .app.dashboard-visible .main { z-index: 20; }
   :root { --pad-main: 16px; }
 
   .app { flex-direction: column; position: relative; }
