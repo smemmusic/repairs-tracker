@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlmodel import Session, select, func
+from sqlmodel import Session, select
 
 from database import get_db
 from models import Instrument, LogEntry, Contributor
@@ -13,7 +13,7 @@ from schemas import (
 router = APIRouter(prefix="/instruments", tags=["instruments"])
 
 
-def _resolve_contributor_name(db: Session, contributor_id: str | None) -> str | None:
+def resolve_contributor_name(db: Session, contributor_id: str | None) -> str | None:
     if not contributor_id:
         return None
     contributor = db.get(Contributor, contributor_id)
@@ -26,7 +26,7 @@ def build_log_entry_response(db: Session, entry: LogEntry, caps: Capabilities) -
         type=entry.entry_type,
         date=entry.performed_at,
         contributor_id=entry.contributor_id,
-        contributor_name=_resolve_contributor_name(db, entry.contributor_id),
+        contributor_name=resolve_contributor_name(db, entry.contributor_id),
         notes=entry.notes,
         status=entry.status,
         score=entry.condition_score if caps.viewScores else None,
@@ -37,36 +37,7 @@ def build_log_entry_response(db: Session, entry: LogEntry, caps: Capabilities) -
     )
 
 
-def build_instrument_detail(db: Session, instrument: Instrument, caps: Capabilities) -> InstrumentDetail:
-    state = get_instrument_state(db, instrument.id)
-
-    entries = db.exec(
-        select(LogEntry)
-        .where(LogEntry.instrument_id == instrument.id)
-        .order_by(LogEntry.performed_at.asc(), LogEntry.created_at.asc())
-    ).all()
-    filtered = filter_log_for_view(entries, caps)
-
-    return InstrumentDetail(
-        id=instrument.id,
-        airtable_id=instrument.airtable_id,
-        display_name=instrument.display_name,
-        serial_number=instrument.serial_number,
-        status=state.status,
-        score=state.score if caps.viewScores else None,
-        labels=state.labels,
-        location=state.location,
-        display_ready=state.display_ready,
-        log_count=len(entries),
-        log=[build_log_entry_response(db, e, caps) for e in filtered],
-    )
-
-
-def build_instrument_summary(db: Session, instrument: Instrument) -> InstrumentSummary:
-    state = get_instrument_state(db, instrument.id)
-    log_count = db.exec(
-        select(func.count()).where(LogEntry.instrument_id == instrument.id)
-    ).one()
+def _build_summary(instrument: Instrument, state, log_count: int) -> InstrumentSummary:
     return InstrumentSummary(
         id=instrument.id,
         airtable_id=instrument.airtable_id,
@@ -81,6 +52,23 @@ def build_instrument_summary(db: Session, instrument: Instrument) -> InstrumentS
     )
 
 
+def build_instrument_detail(db: Session, instrument: Instrument, caps: Capabilities) -> InstrumentDetail:
+    entries = db.exec(
+        select(LogEntry)
+        .where(LogEntry.instrument_id == instrument.id)
+        .order_by(LogEntry.performed_at.asc(), LogEntry.created_at.asc())
+    ).all()
+    state = get_instrument_state(db, instrument.id)
+    filtered = filter_log_for_view(entries, caps)
+    summary = _build_summary(instrument, state, len(entries))
+
+    return InstrumentDetail(
+        **summary.model_dump(),
+        score=state.score if caps.viewScores else None,
+        log=[build_log_entry_response(db, e, caps) for e in filtered],
+    )
+
+
 @router.get("", response_model=list[InstrumentSummary])
 def list_instruments(
     filter: str = Query("all"),
@@ -91,23 +79,25 @@ def list_instruments(
     results: list[InstrumentSummary] = []
 
     for inst in instruments:
-        summary = build_instrument_summary(db, inst)
+        state = get_instrument_state(db, inst.id)
 
+        # Apply filter before building the full summary
         if filter == "display_ready":
-            if not summary.display_ready:
+            if not state.display_ready:
                 continue
         elif filter != "all":
-            if summary.status != filter:
+            if state.status != filter:
                 continue
 
         if search:
             q = search.lower()
-            name_match = q in inst.display_name.lower()
-            serial_match = inst.serial_number and q in inst.serial_number.lower()
-            if not name_match and not serial_match:
+            if q not in inst.display_name.lower() and not (inst.serial_number and q in inst.serial_number.lower()):
                 continue
 
-        results.append(summary)
+        log_count = len(db.exec(
+            select(LogEntry.id).where(LogEntry.instrument_id == inst.id)
+        ).all())
+        results.append(_build_summary(inst, state, log_count))
 
     return results
 

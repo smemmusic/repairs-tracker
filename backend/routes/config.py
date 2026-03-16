@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 from fastapi import APIRouter
 
 from enums import InstrumentStatus, EntryType, LabelKey
@@ -8,8 +10,8 @@ from schemas import ConfigResponse, StatusDef, EntryTypeDef, LabelDef
 router = APIRouter(tags=["config"])
 
 
-@router.get("/config", response_model=ConfigResponse)
-def get_config():
+@lru_cache
+def _build_config() -> ConfigResponse:
     return ConfigResponse(
         statuses=[
             StatusDef(key=s, label=s.value.replace("_", " ").title())
@@ -27,3 +29,8 @@ def get_config():
         inferenceRules=label_rules_as_config(),
         statusSuggestions=status_suggestions_as_config(),
     )
+
+
+@router.get("/config", response_model=ConfigResponse)
+def get_config():
+    return _build_config()

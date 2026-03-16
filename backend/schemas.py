@@ -41,6 +41,9 @@ class UserResponse(BaseModel):
     name: str
 
 
+LoginUser = UserResponse
+
+
 class Capabilities(BaseModel):
     viewLogHistory: bool = False
     viewScores: bool = False
@@ -55,11 +58,6 @@ class Capabilities(BaseModel):
 class SessionResponse(BaseModel):
     user: Optional[UserResponse] = None
     capabilities: Capabilities
-
-
-class LoginUser(BaseModel):
-    id: str
-    name: str
 
 
 # ── Log Entries ──────────────────────────────────────────────────────
@@ -141,18 +139,7 @@ class DashboardStats(BaseModel):
     needsAttention: int
 
 
-class ActivityEntry(BaseModel):
-    id: str
-    type: EntryType
-    date: datetime.date
-    contributor_id: Optional[str] = None
-    contributor_name: Optional[str] = None
-    notes: str
-    status: Optional[InstrumentStatus] = None
-    score: Optional[int] = None
-    location: Optional[str] = None
-    labels_added: list[LabelKey] = []
-    labels_removed: list[LabelKey] = []
+class ActivityEntry(LogEntryResponse):
     instrumentId: str
     instrumentName: str
 

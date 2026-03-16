@@ -6,7 +6,7 @@ from sqlmodel import Session
 
 from database import get_db
 from models import Instrument, LogEntry
-from computed import get_current_status, get_current_score, get_current_labels
+from computed import get_instrument_state
 from permissions import authorize_add_entry, enforce_guest_overrides, authorize_edit_entry, authorize_delete_entry
 from routes.auth import require_session
 from routes.instruments import build_instrument_detail, build_log_entry_response
@@ -34,27 +34,26 @@ def add_log_entry(
     if not instrument:
         raise HTTPException(404, "Instrument not found")
 
-    current_status = get_current_status(db, instrument_id)
-    current_score = get_current_score(db, instrument_id)
-    current_labels = get_current_labels(db, instrument_id)
+    # Single query to get current state
+    state = get_instrument_state(db, instrument_id)
 
     # Guest override
-    overrides = enforce_guest_overrides(body.type, current_status, current_labels, caps)
+    overrides = enforce_guest_overrides(body.type, state.status, state.labels, caps)
 
     # Determine effective status (only record if it changed)
     raw_status = overrides.status if overrides else body.status
-    effective_status = raw_status if raw_status and raw_status != current_status else None
+    effective_status = raw_status if raw_status and raw_status != state.status else None
 
     # Determine effective score (only record if it changed)
-    effective_score = body.score if body.score is not None and body.score != current_score else None
+    effective_score = body.score if body.score is not None and body.score != state.score else None
 
     # Determine effective labels
     labels_added = overrides.labels_added if overrides else body.labels_added
     labels_removed = overrides.labels_removed if overrides else body.labels_removed
 
     # Filter: only add labels not already present, only remove labels that are present
-    labels_added = [l for l in labels_added if l not in current_labels]
-    labels_removed = [l for l in labels_removed if l in current_labels]
+    labels_added = [l for l in labels_added if l not in state.labels]
+    labels_removed = [l for l in labels_removed if l in state.labels]
 
     # Resolve contributor from session
     contributor_id = session.user.id if session.user else None

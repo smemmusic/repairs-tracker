@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session, select
+from sqlalchemy.orm import joinedload
 
 from database import get_db
-from models import Instrument, LogEntry, Contributor
+from models import Instrument, LogEntry
 from computed import get_instrument_state
 from enums import InstrumentStatus, LabelKey
 from config import DASHBOARD_FEED_LIMIT
@@ -46,20 +47,18 @@ def get_recent_activity(
 ):
     entries = db.exec(
         select(LogEntry)
+        .options(joinedload(LogEntry.instrument), joinedload(LogEntry.contributor))
         .order_by(LogEntry.performed_at.desc(), LogEntry.created_at.desc())
         .limit(limit)
-    ).all()
+    ).unique().all()
 
-    results: list[ActivityEntry] = []
-    for entry in entries:
-        instrument = db.get(Instrument, entry.instrument_id)
-        contributor = db.get(Contributor, entry.contributor_id) if entry.contributor_id else None
-        results.append(ActivityEntry(
+    return [
+        ActivityEntry(
             id=entry.id,
             type=entry.entry_type,
             date=entry.performed_at,
             contributor_id=entry.contributor_id,
-            contributor_name=contributor.name if contributor else None,
+            contributor_name=entry.contributor.name if entry.contributor else None,
             notes=entry.notes,
             status=entry.status,
             score=entry.condition_score,
@@ -67,7 +66,7 @@ def get_recent_activity(
             labels_added=entry.labels_added or [],
             labels_removed=entry.labels_removed or [],
             instrumentId=entry.instrument_id,
-            instrumentName=instrument.display_name if instrument else "Unknown",
-        ))
-
-    return results
+            instrumentName=entry.instrument.display_name if entry.instrument else "Unknown",
+        )
+        for entry in entries
+    ]

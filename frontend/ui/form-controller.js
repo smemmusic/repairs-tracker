@@ -81,12 +81,7 @@ export async function submitEntry() {
     store.set('editingEntryId', null);
     _showToast('Log entry updated');
   } else {
-    // Create mode — add new entry
-    const effectiveStatus = (values.status && values.status !== inst.status)
-      ? values.status : null;
-    const effectiveScore = (values.score && parseInt(values.score) !== inst.score)
-      ? parseInt(values.score) : null;
-
+    // Create mode — send raw values, server handles change detection
     const { added: labelsAdded, removed: labelsRemoved } = partitionLabelActions(store.get('pendingLabels'));
 
     try {
@@ -94,12 +89,11 @@ export async function submitEntry() {
         type: values.type,
         date: values.date,
         notes: values.notes.trim(),
-        status: effectiveStatus,
-        score: effectiveScore,
+        status: values.status || null,
+        score: values.score ? parseInt(values.score) : null,
         location: values.location || null,
         labelsAdded,
         labelsRemoved,
-        attachments: store.get('stagedFiles'),
       });
     } catch (e) {
       alert(e.message);
