@@ -26,7 +26,9 @@ class Instrument(SQLModel, table=True):
 
     log_entries: list["LogEntry"] = Relationship(
         back_populates="instrument",
-        sa_relationship_kwargs={"order_by": "LogEntry.performed_at, LogEntry.created_at"},
+        sa_relationship_kwargs={
+            "order_by": "LogEntry.performed_at, LogEntry.created_at"
+        },
     )
 
 
@@ -43,8 +45,12 @@ class LogEntry(SQLModel, table=True):
     status: Optional[InstrumentStatus] = None
     condition_score: Optional[int] = Field(default=None, ge=1, le=10)
     location: Optional[str] = None
-    labels_added: list[str] = Field(default_factory=list, sa_column=Column(JSON, default=[]))
-    labels_removed: list[str] = Field(default_factory=list, sa_column=Column(JSON, default=[]))
+    labels_added: list[str] = Field(
+        default_factory=list, sa_column=Column(JSON, default=[])
+    )
+    labels_removed: list[str] = Field(
+        default_factory=list, sa_column=Column(JSON, default=[])
+    )
 
     instrument: Optional[Instrument] = Relationship(back_populates="log_entries")
     contributor: Optional[Contributor] = Relationship(back_populates="log_entries")

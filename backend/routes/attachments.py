@@ -12,7 +12,9 @@ router = APIRouter(prefix="/attachments", tags=["attachments"])
 
 
 @router.post("/upload")
-async def upload_attachment(file: UploadFile, db: DbSession, session: Auth) -> AttachmentResponse:
+async def upload_attachment(
+    file: UploadFile, db: DbSession, session: Auth
+) -> AttachmentResponse:
     file_id = str(uuid.uuid4())
     ext = file.filename.rsplit(".", 1)[-1] if "." in file.filename else ""
     stored_name = f"{file_id}.{ext}" if ext else file_id
@@ -25,7 +27,9 @@ async def upload_attachment(file: UploadFile, db: DbSession, session: Auth) -> A
             size += len(chunk)
             if size > MAX_UPLOAD_SIZE:
                 dest.unlink(missing_ok=True)
-                raise HTTPException(413, f"File too large (max {MAX_UPLOAD_SIZE // 1024 // 1024} MB)")
+                raise HTTPException(
+                    413, f"File too large (max {MAX_UPLOAD_SIZE // 1024 // 1024} MB)"
+                )
             f.write(chunk)
 
     # Save record (unlinked — log_entry_id set when log entry is created)

@@ -21,8 +21,9 @@ def get_instrument_state(db: Session, instrument_id: str) -> InstrumentState:
 def get_all_instrument_states(db: Session) -> dict[str, InstrumentState]:
     """Bulk-compute state for all instruments in a single query."""
     entries = db.exec(
-        select(LogEntry)
-        .order_by(LogEntry.performed_at.asc(), LogEntry.created_at.asc())
+        select(LogEntry).order_by(
+            LogEntry.performed_at.asc(), LogEntry.created_at.asc()
+        )
     ).all()
 
     grouped: dict[str, list[LogEntry]] = defaultdict(list)
@@ -56,7 +57,7 @@ def _compute_state(entries: list[LogEntry]) -> InstrumentState:
         labels.update(e.labels_added or [])
         labels.difference_update(e.labels_removed or [])
 
-    sorted_labels = sorted(LabelKey(l) for l in labels)
+    sorted_labels = sorted(LabelKey(key) for key in labels)
     return InstrumentState(
         status=status,
         score=score,

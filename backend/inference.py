@@ -26,21 +26,47 @@ class _StatusRule(NamedTuple):
 
 
 LABEL_RULES: list[_LabelRule] = [
-    _LabelRule(None,                   InstrumentStatus.BROKEN,  LabelKey.NEEDS_REPAIR,        LabelAction.ADD),
-    _LabelRule(EntryType.FAULT_REPORT, None,                     LabelKey.NEEDS_INVESTIGATION, LabelAction.ADD),
-    _LabelRule(EntryType.ASSESSMENT,   InstrumentStatus.WORKING, LabelKey.NEEDS_REPAIR,        LabelAction.REMOVE),
-    _LabelRule(EntryType.REPAIR,       InstrumentStatus.WORKING, LabelKey.NEEDS_REPAIR,        LabelAction.REMOVE),
-    _LabelRule(EntryType.REPAIR,       InstrumentStatus.WORKING, LabelKey.NEEDS_INVESTIGATION, LabelAction.REMOVE),
-    _LabelRule(EntryType.REPAIR,       InstrumentStatus.WORKING, LabelKey.NEEDS_PARTS,         LabelAction.REMOVE),
-    _LabelRule(EntryType.CLEANING,     None,                     LabelKey.NEEDS_CLEANING,      LabelAction.REMOVE),
+    _LabelRule(None, InstrumentStatus.BROKEN, LabelKey.NEEDS_REPAIR, LabelAction.ADD),
+    _LabelRule(
+        EntryType.FAULT_REPORT, None, LabelKey.NEEDS_INVESTIGATION, LabelAction.ADD
+    ),
+    _LabelRule(
+        EntryType.ASSESSMENT,
+        InstrumentStatus.WORKING,
+        LabelKey.NEEDS_REPAIR,
+        LabelAction.REMOVE,
+    ),
+    _LabelRule(
+        EntryType.REPAIR,
+        InstrumentStatus.WORKING,
+        LabelKey.NEEDS_REPAIR,
+        LabelAction.REMOVE,
+    ),
+    _LabelRule(
+        EntryType.REPAIR,
+        InstrumentStatus.WORKING,
+        LabelKey.NEEDS_INVESTIGATION,
+        LabelAction.REMOVE,
+    ),
+    _LabelRule(
+        EntryType.REPAIR,
+        InstrumentStatus.WORKING,
+        LabelKey.NEEDS_PARTS,
+        LabelAction.REMOVE,
+    ),
+    _LabelRule(EntryType.CLEANING, None, LabelKey.NEEDS_CLEANING, LabelAction.REMOVE),
 ]
 
 STATUS_SUGGESTIONS: list[_StatusRule] = [
-    _StatusRule(EntryType.FAULT_REPORT, InstrumentStatus.WORKING, InstrumentStatus.UNKNOWN),
+    _StatusRule(
+        EntryType.FAULT_REPORT, InstrumentStatus.WORKING, InstrumentStatus.UNKNOWN
+    ),
 ]
 
 
-def infer_status_suggestion(entry_type: EntryType, current_status: InstrumentStatus) -> InstrumentStatus | None:
+def infer_status_suggestion(
+    entry_type: EntryType, current_status: InstrumentStatus
+) -> InstrumentStatus | None:
     for rule in STATUS_SUGGESTIONS:
         if rule.entry_type == entry_type and rule.current_status == current_status:
             return rule.suggested_status

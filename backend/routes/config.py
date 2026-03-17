@@ -22,8 +22,12 @@ def _build_config() -> ConfigResponse:
             for t in EntryType
         ],
         labels=[
-            LabelDef(key=l, label=l.value.replace("_", " ").title(), cls=f"label-{l.value}")
-            for l in LabelKey
+            LabelDef(
+                key=lk,
+                label=lk.value.replace("_", " ").title(),
+                cls=f"label-{lk.value}",
+            )
+            for lk in LabelKey
         ],
         displayReadyThreshold=DISPLAY_READY_THRESHOLD,
         inferenceRules=label_rules_as_config(),

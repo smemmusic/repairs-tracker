@@ -9,11 +9,19 @@ from config import UPLOAD_DIR
 from deps import DbSession, Auth, OptionalAuth
 from models import Instrument, LogEntry, Attachment
 from computed import get_instrument_state
-from permissions import GUEST_CAPABILITIES, authorize_add_entry, enforce_guest_overrides, authorize_edit_entry, authorize_delete_entry
+from permissions import (
+    GUEST_CAPABILITIES,
+    authorize_add_entry,
+    enforce_guest_overrides,
+    authorize_edit_entry,
+    authorize_delete_entry,
+)
 from routes.instruments import build_instrument_detail, build_log_entry_response
 from schemas import (
-    AddLogEntryRequest, EditLogEntryRequest,
-    AddLogEntryResponse, MutateInstrumentResponse,
+    AddLogEntryRequest,
+    EditLogEntryRequest,
+    AddLogEntryResponse,
+    MutateInstrumentResponse,
 )
 
 router = APIRouter(prefix="/instruments/{instrument_id}/log", tags=["log_entries"])
@@ -46,15 +54,17 @@ def add_log_entry(
     effective_status = raw_status if raw_status and raw_status != state.status else None
 
     # Determine effective score (only record if it changed)
-    effective_score = body.score if body.score is not None and body.score != state.score else None
+    effective_score = (
+        body.score if body.score is not None and body.score != state.score else None
+    )
 
     # Determine effective labels
     labels_added = overrides.labels_added if overrides else body.labels_added
     labels_removed = overrides.labels_removed if overrides else body.labels_removed
 
     # Filter: only add labels not already present, only remove labels that are present
-    labels_added = [l for l in labels_added if l not in state.labels]
-    labels_removed = [l for l in labels_removed if l in state.labels]
+    labels_added = [key for key in labels_added if key not in state.labels]
+    labels_removed = [key for key in labels_removed if key in state.labels]
 
     # Resolve contributor from session
     contributor_id = session.user.id if session and session.user else None

@@ -50,10 +50,7 @@ def get_login_users(db: DbSession) -> list[LoginUser]:
     contributors = db.exec(
         select(Contributor).where(Contributor.drupal_user_id.isnot(None))
     ).all()
-    return [
-        LoginUser(id=c.drupal_user_id, name=c.name)
-        for c in contributors
-    ]
+    return [LoginUser(id=c.drupal_user_id, name=c.name) for c in contributors]
 
 
 @router.post("/logout", status_code=204)

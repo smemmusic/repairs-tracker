@@ -20,12 +20,16 @@ GUEST_CAPABILITIES = Capabilities(
 )
 
 
-def authorize_add_entry(entry_type: EntryType, has_status: bool, has_labels: bool, caps: Capabilities):
+def authorize_add_entry(
+    entry_type: EntryType, has_status: bool, has_labels: bool, caps: Capabilities
+):
     is_fault_report = entry_type == EntryType.FAULT_REPORT
     if is_fault_report and not caps.submitFaultReport:
         raise HTTPException(403, "Permission denied: cannot submit fault reports")
     if not is_fault_report and not caps.submitOtherEntryTypes:
-        raise HTTPException(403, "Permission denied: login required for this entry type")
+        raise HTTPException(
+            403, "Permission denied: login required for this entry type"
+        )
     if has_status and not caps.setStatus and not is_fault_report:
         raise HTTPException(403, "Permission denied: login required to set status")
     if has_labels and not caps.setLabels and not is_fault_report:
@@ -56,9 +60,15 @@ def enforce_guest_overrides(
 
     if not caps.setLabels:
         effective_status = status or current_status
-        result = infer_label_suggestions(EntryType.FAULT_REPORT, effective_status, current_labels)
-        labels_added = [k for k, v in result.suggestions.items() if v == LabelAction.ADD]
-        labels_removed = [k for k, v in result.suggestions.items() if v == LabelAction.REMOVE]
+        result = infer_label_suggestions(
+            EntryType.FAULT_REPORT, effective_status, current_labels
+        )
+        labels_added = [
+            k for k, v in result.suggestions.items() if v == LabelAction.ADD
+        ]
+        labels_removed = [
+            k for k, v in result.suggestions.items() if v == LabelAction.REMOVE
+        ]
 
     return GuestOverrides(
         status=status,
@@ -69,12 +79,16 @@ def enforce_guest_overrides(
 
 def authorize_edit_entry(caps: Capabilities):
     if not caps.editLogEntry:
-        raise HTTPException(403, "Permission denied: login required to edit log entries")
+        raise HTTPException(
+            403, "Permission denied: login required to edit log entries"
+        )
 
 
 def authorize_delete_entry(caps: Capabilities):
     if not caps.deleteLogEntry:
-        raise HTTPException(403, "Permission denied: login required to delete log entries")
+        raise HTTPException(
+            403, "Permission denied: login required to delete log entries"
+        )
 
 
 def filter_log_for_view(log_entries: list, caps: Capabilities) -> list:

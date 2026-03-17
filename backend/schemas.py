@@ -8,8 +8,10 @@ from enums import InstrumentStatus, EntryType, LabelKey, LabelAction
 
 # ── Domain (internal) ────────────────────────────────────────────────
 
+
 class InstrumentState(BaseModel):
     """Computed state derived from an instrument's log entries."""
+
     status: InstrumentStatus
     score: Optional[int] = None
     labels: list[LabelKey] = []
@@ -19,6 +21,7 @@ class InstrumentState(BaseModel):
 
 class GuestOverrides(BaseModel):
     """Server-inferred values applied to guest fault reports."""
+
     status: Optional[InstrumentStatus] = None
     labels_added: list[LabelKey] = []
     labels_removed: list[LabelKey] = []
@@ -26,10 +29,12 @@ class GuestOverrides(BaseModel):
 
 class LabelSuggestions(BaseModel):
     """Inferred label changes keyed by label."""
+
     suggestions: dict[LabelKey, LabelAction] = {}
 
 
 # ── Auth ─────────────────────────────────────────────────────────────
+
 
 class LoginRequest(BaseModel):
     user_id: str
@@ -62,6 +67,7 @@ class SessionResponse(BaseModel):
 
 # ── Attachments ──────────────────────────────────────────────────────
 
+
 class AttachmentResponse(BaseModel):
     id: str
     file_name: str
@@ -70,6 +76,7 @@ class AttachmentResponse(BaseModel):
 
 
 # ── Log Entries ──────────────────────────────────────────────────────
+
 
 class LogEntryResponse(BaseModel):
     id: str
@@ -103,6 +110,7 @@ class EditLogEntryRequest(BaseModel):
     All fields optional. Only fields present in the JSON body are applied.
     Use `body.model_fields_set` to check which fields were explicitly sent.
     """
+
     notes: Optional[str] = None
     status: Optional[InstrumentStatus] = None
     score: Optional[int] = Field(default=None, ge=1, le=10)
@@ -112,6 +120,7 @@ class EditLogEntryRequest(BaseModel):
 
 
 # ── Instruments ──────────────────────────────────────────────────────
+
 
 class InstrumentSummary(BaseModel):
     id: str
@@ -141,6 +150,7 @@ class MutateInstrumentResponse(BaseModel):
 
 # ── Dashboard ────────────────────────────────────────────────────────
 
+
 class DashboardStats(BaseModel):
     total: int
     statusCounts: dict[str, int]
@@ -155,6 +165,7 @@ class ActivityEntry(LogEntryResponse):
 
 
 # ── Config ───────────────────────────────────────────────────────────
+
 
 class StatusDef(BaseModel):
     key: InstrumentStatus

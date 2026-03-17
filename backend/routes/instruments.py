@@ -1,16 +1,18 @@
-from collections import defaultdict
-
 from fastapi import APIRouter, HTTPException, Query
 from sqlmodel import select, func
 from sqlalchemy.orm import selectinload
 
 from deps import DbSession, OptionalAuth
 from models import Instrument, LogEntry
-from computed import get_instrument_state, get_all_instrument_states, compute_state_from_entries
+from computed import get_all_instrument_states, compute_state_from_entries
 from permissions import filter_log_for_view
 from schemas import (
-    Capabilities, InstrumentSummary, InstrumentDetail,
-    LogEntryResponse, AttachmentResponse, InstrumentState,
+    Capabilities,
+    InstrumentSummary,
+    InstrumentDetail,
+    LogEntryResponse,
+    AttachmentResponse,
+    InstrumentState,
 )
 
 router = APIRouter(prefix="/instruments", tags=["instruments"])
@@ -42,7 +44,9 @@ def build_log_entry_response(entry: LogEntry, caps: Capabilities) -> LogEntryRes
     )
 
 
-def _build_summary(instrument: Instrument, state: InstrumentState, log_count: int) -> InstrumentSummary:
+def _build_summary(
+    instrument: Instrument, state: InstrumentState, log_count: int
+) -> InstrumentSummary:
     return InstrumentSummary(
         id=instrument.id,
         airtable_id=instrument.airtable_id,
@@ -57,7 +61,9 @@ def _build_summary(instrument: Instrument, state: InstrumentState, log_count: in
     )
 
 
-def build_instrument_detail(db: DbSession, instrument: Instrument, caps: Capabilities) -> InstrumentDetail:
+def build_instrument_detail(
+    db: DbSession, instrument: Instrument, caps: Capabilities
+) -> InstrumentDetail:
     """Build full instrument detail. Used by single-instrument endpoints."""
     entries = db.exec(
         select(LogEntry)
@@ -93,16 +99,22 @@ def list_instruments(
 
     # 1 query: all log counts
     count_rows = db.exec(
-        select(LogEntry.instrument_id, func.count())
-        .group_by(LogEntry.instrument_id)
+        select(LogEntry.instrument_id, func.count()).group_by(LogEntry.instrument_id)
     ).all()
     log_counts = dict(count_rows)
 
     results: list[InstrumentSummary] = []
     for inst in instruments:
-        state = states.get(inst.id, InstrumentState(
-            status="unknown", score=None, labels=[], location=None, display_ready=False,
-        ))
+        state = states.get(
+            inst.id,
+            InstrumentState(
+                status="unknown",
+                score=None,
+                labels=[],
+                location=None,
+                display_ready=False,
+            ),
+        )
 
         if filter == "display_ready":
             if not state.display_ready:
@@ -113,7 +125,9 @@ def list_instruments(
 
         if search:
             q = search.lower()
-            if q not in inst.display_name.lower() and not (inst.serial_number and q in inst.serial_number.lower()):
+            if q not in inst.display_name.lower() and not (
+                inst.serial_number and q in inst.serial_number.lower()
+            ):
                 continue
 
         results.append(_build_summary(inst, state, log_counts.get(inst.id, 0)))
@@ -122,7 +136,9 @@ def list_instruments(
 
 
 @router.get("/{instrument_id}")
-def get_instrument(instrument_id: str, db: DbSession, session: OptionalAuth) -> InstrumentDetail:
+def get_instrument(
+    instrument_id: str, db: DbSession, session: OptionalAuth
+) -> InstrumentDetail:
     instrument = db.get(Instrument, instrument_id)
     if not instrument:
         raise HTTPException(404, "Instrument not found")

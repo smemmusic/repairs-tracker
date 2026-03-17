@@ -21,14 +21,21 @@ def get_dashboard_stats(db: DbSession) -> DashboardStats:
     states = get_all_instrument_states(db)
 
     status_counts = {s.value: 0 for s in InstrumentStatus}
-    label_counts = {l.value: 0 for l in LabelKey}
+    label_counts = {lk.value: 0 for lk in LabelKey}
     display_ready = 0
     needs_attention = 0
 
     for inst in instruments:
-        state = states.get(inst.id, InstrumentState(
-            status="unknown", score=None, labels=[], location=None, display_ready=False,
-        ))
+        state = states.get(
+            inst.id,
+            InstrumentState(
+                status="unknown",
+                score=None,
+                labels=[],
+                location=None,
+                display_ready=False,
+            ),
+        )
         status_counts[state.status] = status_counts.get(state.status, 0) + 1
         if state.display_ready:
             display_ready += 1
@@ -47,13 +54,19 @@ def get_dashboard_stats(db: DbSession) -> DashboardStats:
 
 
 @router.get("/activity")
-def get_recent_activity(db: DbSession, limit: int = Query(default=DASHBOARD_FEED_LIMIT)) -> list[ActivityEntry]:
-    entries = db.exec(
-        select(LogEntry)
-        .options(joinedload(LogEntry.instrument), joinedload(LogEntry.contributor))
-        .order_by(LogEntry.performed_at.desc(), LogEntry.created_at.desc())
-        .limit(limit)
-    ).unique().all()
+def get_recent_activity(
+    db: DbSession, limit: int = Query(default=DASHBOARD_FEED_LIMIT)
+) -> list[ActivityEntry]:
+    entries = (
+        db.exec(
+            select(LogEntry)
+            .options(joinedload(LogEntry.instrument), joinedload(LogEntry.contributor))
+            .order_by(LogEntry.performed_at.desc(), LogEntry.created_at.desc())
+            .limit(limit)
+        )
+        .unique()
+        .all()
+    )
 
     return [
         ActivityEntry(
@@ -69,7 +82,9 @@ def get_recent_activity(db: DbSession, limit: int = Query(default=DASHBOARD_FEED
             labels_added=entry.labels_added or [],
             labels_removed=entry.labels_removed or [],
             instrumentId=entry.instrument_id,
-            instrumentName=entry.instrument.display_name if entry.instrument else "Unknown",
+            instrumentName=entry.instrument.display_name
+            if entry.instrument
+            else "Unknown",
         )
         for entry in entries
     ]
