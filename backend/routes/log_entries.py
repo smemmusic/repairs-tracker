@@ -1,15 +1,15 @@
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 from sqlmodel import select
 from sqlalchemy.orm import selectinload
 
 from config import UPLOAD_DIR
-from deps import DbSession, Auth
+from deps import DbSession, Auth, OptionalAuth
 from models import Instrument, LogEntry, Attachment
 from computed import get_instrument_state
-from permissions import authorize_add_entry, enforce_guest_overrides, authorize_edit_entry, authorize_delete_entry
+from permissions import GUEST_CAPABILITIES, authorize_add_entry, enforce_guest_overrides, authorize_edit_entry, authorize_delete_entry
 from routes.instruments import build_instrument_detail, build_log_entry_response
 from schemas import (
     AddLogEntryRequest, EditLogEntryRequest,
@@ -24,9 +24,9 @@ def add_log_entry(
     instrument_id: str,
     body: AddLogEntryRequest,
     db: DbSession,
-    session: Auth,
+    session: OptionalAuth,
 ) -> AddLogEntryResponse:
-    caps = session.capabilities
+    caps = session.capabilities if session else GUEST_CAPABILITIES
     has_status = body.status is not None
     has_labels = len(body.labels_added) > 0 or len(body.labels_removed) > 0
     authorize_add_entry(body.type, has_status, has_labels, caps)
@@ -57,14 +57,14 @@ def add_log_entry(
     labels_removed = [l for l in labels_removed if l in state.labels]
 
     # Resolve contributor from session
-    contributor_id = session.user.id if session.user else None
+    contributor_id = session.user.id if session and session.user else None
 
     entry = LogEntry(
         id=str(uuid.uuid4()),
         instrument_id=instrument_id,
         contributor_id=contributor_id,
         performed_at=body.date or date.today(),
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc),
         entry_type=body.type,
         notes=body.notes,
         status=effective_status,

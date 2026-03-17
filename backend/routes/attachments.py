@@ -1,16 +1,14 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, UploadFile, HTTPException
 
-from config import UPLOAD_DIR
+from config import UPLOAD_DIR, MAX_UPLOAD_SIZE
 from deps import DbSession, Auth
 from models import Attachment
 from schemas import AttachmentResponse
 
 router = APIRouter(prefix="/attachments", tags=["attachments"])
-
-MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
 
 
 @router.post("/upload")
@@ -36,7 +34,7 @@ async def upload_attachment(file: UploadFile, db: DbSession, session: Auth) -> A
         file_path=stored_name,
         file_name=file.filename,
         mime_type=file.content_type or "application/octet-stream",
-        uploaded_at=datetime.utcnow(),
+        uploaded_at=datetime.now(timezone.utc),
     )
     db.add(attachment)
     db.commit()

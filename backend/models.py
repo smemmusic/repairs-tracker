@@ -1,5 +1,5 @@
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Optional
 
 from sqlmodel import SQLModel, Field, Relationship
@@ -22,7 +22,7 @@ class Instrument(SQLModel, table=True):
     airtable_id: str = Field(unique=True)
     display_name: str
     serial_number: Optional[str] = None
-    last_synced_at: datetime = Field(default_factory=datetime.utcnow)
+    last_synced_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     log_entries: list["LogEntry"] = Relationship(
         back_populates="instrument",
@@ -37,7 +37,7 @@ class LogEntry(SQLModel, table=True):
     instrument_id: str = Field(foreign_key="instrument.id")
     contributor_id: Optional[str] = Field(default=None, foreign_key="contributor.id")
     performed_at: date
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     entry_type: EntryType
     notes: str
     status: Optional[InstrumentStatus] = None
@@ -57,6 +57,6 @@ class Attachment(SQLModel, table=True):
     file_path: str
     file_name: str
     mime_type: str
-    uploaded_at: datetime = Field(default_factory=datetime.utcnow)
+    uploaded_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     log_entry: Optional[LogEntry] = Relationship(back_populates="attachments")
