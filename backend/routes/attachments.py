@@ -1,28 +1,24 @@
 import uuid
-import shutil
+from datetime import datetime
 
 from fastapi import APIRouter, UploadFile, HTTPException, Depends
-from pydantic import BaseModel
+from sqlmodel import Session
 
 from config import UPLOAD_DIR
+from database import get_db
+from models import Attachment
 from routes.auth import require_session
-from schemas import SessionResponse
+from schemas import SessionResponse, AttachmentResponse
 
 router = APIRouter(prefix="/attachments", tags=["attachments"])
 
 MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
 
 
-class AttachmentResponse(BaseModel):
-    id: str
-    file_name: str
-    mime_type: str
-    url: str
-
-
 @router.post("/upload", response_model=AttachmentResponse)
 async def upload_attachment(
     file: UploadFile,
+    db: Session = Depends(get_db),
     session: SessionResponse = Depends(require_session),
 ):
     file_id = str(uuid.uuid4())
@@ -40,9 +36,20 @@ async def upload_attachment(
                 raise HTTPException(413, f"File too large (max {MAX_UPLOAD_SIZE // 1024 // 1024} MB)")
             f.write(chunk)
 
-    return AttachmentResponse(
+    # Save record (unlinked — log_entry_id set when log entry is created)
+    attachment = Attachment(
         id=file_id,
+        file_path=stored_name,
         file_name=file.filename,
         mime_type=file.content_type or "application/octet-stream",
+        uploaded_at=datetime.utcnow(),
+    )
+    db.add(attachment)
+    db.commit()
+
+    return AttachmentResponse(
+        id=attachment.id,
+        file_name=attachment.file_name,
+        mime_type=attachment.mime_type,
         url=f"/uploads/{stored_name}",
     )

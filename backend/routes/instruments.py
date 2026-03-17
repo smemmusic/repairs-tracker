@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session, select
+from sqlalchemy.orm import selectinload
 
 from database import get_db
 from models import Instrument, LogEntry, Contributor
@@ -7,7 +8,8 @@ from computed import get_instrument_state
 from permissions import filter_log_for_view
 from routes.auth import get_session_data
 from schemas import (
-    SessionResponse, Capabilities, InstrumentSummary, InstrumentDetail, LogEntryResponse,
+    SessionResponse, Capabilities, InstrumentSummary, InstrumentDetail,
+    LogEntryResponse, AttachmentResponse,
 )
 
 router = APIRouter(prefix="/instruments", tags=["instruments"])
@@ -33,7 +35,15 @@ def build_log_entry_response(db: Session, entry: LogEntry, caps: Capabilities) -
         location=entry.location,
         labels_added=entry.labels_added or [],
         labels_removed=entry.labels_removed or [],
-        attachments=[],
+        attachments=[
+            AttachmentResponse(
+                id=a.id,
+                file_name=a.file_name,
+                mime_type=a.mime_type,
+                url=f"/uploads/{a.file_path}",
+            )
+            for a in (entry.attachments or [])
+        ],
     )
 
 
@@ -56,15 +66,18 @@ def build_instrument_detail(db: Session, instrument: Instrument, caps: Capabilit
     entries = db.exec(
         select(LogEntry)
         .where(LogEntry.instrument_id == instrument.id)
+        .options(selectinload(LogEntry.attachments))
         .order_by(LogEntry.performed_at.asc(), LogEntry.created_at.asc())
     ).all()
     state = get_instrument_state(db, instrument.id)
     filtered = filter_log_for_view(entries, caps)
     summary = _build_summary(instrument, state, len(entries))
+    data = summary.model_dump()
+    if not caps.viewScores:
+        data["score"] = None
 
     return InstrumentDetail(
-        **summary.model_dump(),
-        score=state.score if caps.viewScores else None,
+        **data,
         log=[build_log_entry_response(db, e, caps) for e in filtered],
     )
 

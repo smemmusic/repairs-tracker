@@ -2,10 +2,11 @@ import uuid
 from datetime import date, datetime
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session
+from sqlmodel import Session, select
+from sqlalchemy.orm import selectinload
 
 from database import get_db
-from models import Instrument, LogEntry
+from models import Instrument, LogEntry, Attachment
 from computed import get_instrument_state
 from permissions import authorize_add_entry, enforce_guest_overrides, authorize_edit_entry, authorize_delete_entry
 from routes.auth import require_session
@@ -74,9 +75,23 @@ def add_log_entry(
     )
 
     db.add(entry)
+
+    # Link uploaded attachments to this log entry
+    for att_id in body.attachment_ids:
+        attachment = db.get(Attachment, att_id)
+        if attachment:
+            attachment.log_entry_id = entry.id
+            db.add(attachment)
+
     db.commit()
-    db.refresh(entry)
     db.refresh(instrument)
+
+    # Re-query entry with attachments loaded
+    entry = db.exec(
+        select(LogEntry)
+        .where(LogEntry.id == entry.id)
+        .options(selectinload(LogEntry.attachments))
+    ).one()
 
     return AddLogEntryResponse(
         instrument=build_instrument_detail(db, instrument, caps),

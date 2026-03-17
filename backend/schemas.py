@@ -60,6 +60,15 @@ class SessionResponse(BaseModel):
     capabilities: Capabilities
 
 
+# ── Attachments ──────────────────────────────────────────────────────
+
+class AttachmentResponse(BaseModel):
+    id: str
+    file_name: str
+    mime_type: str
+    url: str
+
+
 # ── Log Entries ──────────────────────────────────────────────────────
 
 class LogEntryResponse(BaseModel):
@@ -74,7 +83,7 @@ class LogEntryResponse(BaseModel):
     location: Optional[str] = None
     labels_added: list[LabelKey] = []
     labels_removed: list[LabelKey] = []
-    attachments: list = []
+    attachments: list[AttachmentResponse] = []
 
 
 class AddLogEntryRequest(BaseModel):
@@ -86,6 +95,7 @@ class AddLogEntryRequest(BaseModel):
     location: Optional[str] = None
     labels_added: list[LabelKey] = []
     labels_removed: list[LabelKey] = []
+    attachment_ids: list[str] = []
 
 
 class EditLogEntryRequest(BaseModel):

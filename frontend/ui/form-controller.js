@@ -94,6 +94,7 @@ export async function submitEntry() {
         location: values.location || null,
         labelsAdded,
         labelsRemoved,
+        attachmentIds: store.get('stagedFiles').map(f => f.id),
       });
     } catch (e) {
       alert(e.message);
@@ -103,7 +104,6 @@ export async function submitEntry() {
   }
 
   // Clear form state and reset DOM so stale values don't get re-saved as a draft
-  store.get('stagedFiles').forEach(f => URL.revokeObjectURL(f.url));
   store.set('stagedFiles', []);
   store.set('pendingLabels', {});
   store.set('editingEntryId', null);
@@ -243,12 +243,21 @@ export function onLabelToggle(key, action) {
   }
 }
 
-export function onFilesSelected() {
+export async function onFilesSelected() {
   const input = document.getElementById('entryFiles');
   const stagedFiles = store.get('stagedFiles');
   for (const file of input.files) {
-    const url = URL.createObjectURL(file);
-    stagedFiles.push({ name: file.name, type: file.type, url });
+    try {
+      const uploaded = await api.uploadAttachment(file);
+      stagedFiles.push({
+        id: uploaded.id,
+        name: uploaded.file_name,
+        type: uploaded.mime_type,
+        url: uploaded.url,
+      });
+    } catch (e) {
+      alert(`Upload failed: ${e.message}`);
+    }
   }
   store.set('stagedFiles', stagedFiles);
   input.value = '';
@@ -257,7 +266,6 @@ export function onFilesSelected() {
 
 export function removeStagedFile(index) {
   const stagedFiles = store.get('stagedFiles');
-  URL.revokeObjectURL(stagedFiles[index].url);
   stagedFiles.splice(index, 1);
   store.set('stagedFiles', stagedFiles);
   form.renderAttachPreview(stagedFiles, removeStagedFile);

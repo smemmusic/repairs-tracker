@@ -31,6 +31,7 @@ export async function addLogEntry(instrumentId, entry) {
     location: entry.location || null,
     labels_added: entry.labelsAdded || [],
     labels_removed: entry.labelsRemoved || [],
+    attachment_ids: entry.attachmentIds || [],
   });
 }
 
@@ -40,6 +41,24 @@ export async function editLogEntry(instrumentId, logEntryId, updates) {
 
 export async function deleteLogEntry(instrumentId, logEntryId) {
   return request('DELETE', endpoints.logEntry(instrumentId, logEntryId));
+}
+
+/**
+ * Upload a file attachment. Returns { id, file_name, mime_type, url }.
+ */
+export async function uploadAttachment(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await fetch('/api' + endpoints.uploadAttachment(), {
+    method: 'POST',
+    credentials: 'include',
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || res.statusText);
+  }
+  return res.json();
 }
 
 export async function resetAllData() {

@@ -325,10 +325,10 @@ export function renderAttachPreview(stagedFiles, onRemove) {
   stagedFiles.forEach((f, i) => {
     const thumb = document.createElement('div');
     thumb.className = 'attach-thumb';
-    if (f.type.startsWith('image/')) {
-      thumb.innerHTML = `<img src="${esc(f.url)}" alt="${esc(f.name)}"><button class="attach-remove">✕</button>`;
+    if (f.mime_type && f.mime_type.startsWith('image/')) {
+      thumb.innerHTML = `<img src="${esc(f.url)}" alt="${esc(f.file_name)}"><button class="attach-remove">✕</button>`;
     } else {
-      thumb.innerHTML = `<span class="attach-name">${esc(f.name)}</span><button class="attach-remove">✕</button>`;
+      thumb.innerHTML = `<span class="attach-name">${esc(f.file_name)}</span><button class="attach-remove">✕</button>`;
     }
     thumb.querySelector('.attach-remove').onclick = (e) => { e.stopPropagation(); onRemove(i); };
     container.appendChild(thumb);

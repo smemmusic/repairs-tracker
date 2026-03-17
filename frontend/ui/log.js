@@ -41,10 +41,10 @@ export function renderLog(instrument, capabilities, onEdit, onDelete) {
 
     const attachments = entry.attachments || [];
     const attachHtml = attachments.length ? `<div class="log-attachments">${attachments.map(a => {
-      if (a.type && a.type.startsWith('image/')) {
-        return `<div class="log-attach-thumb"><img src="${esc(a.url)}" alt="${esc(a.name)}"></div>`;
+      if (a.mime_type && a.mime_type.startsWith('image/')) {
+        return `<div class="log-attach-thumb"><img src="${esc(a.url)}" alt="${esc(a.file_name)}"></div>`;
       } else {
-        return `<div class="log-attach-thumb"><span class="attach-name">${esc(a.name)}</span></div>`;
+        return `<div class="log-attach-thumb"><span class="attach-name">${esc(a.file_name)}</span></div>`;
       }
     }).join('')}</div>` : '';
 

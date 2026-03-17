@@ -27,6 +27,9 @@ export const endpoints = Object.freeze({
   logEntries:          (instrumentId) => `/instruments/${instrumentId}/log`,
   logEntry:            (instrumentId, entryId) => `/instruments/${instrumentId}/log/${entryId}`,
 
+  // attachments
+  uploadAttachment:    () => '/attachments/upload',
+
   // admin
   adminReset:          () => '/admin/reset',
 });
