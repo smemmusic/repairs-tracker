@@ -215,6 +215,7 @@ function resetAppState() {
   store.set('selectedId', null);
   store.set('activeFilter', Filter.ALL);
   store.set('pendingLabels', {});
+  store.get('stagedFiles').forEach(f => URL.revokeObjectURL(f.url));
   store.set('stagedFiles', []);
   store.set('editingEntryId', null);
   store.set('currentInstrument', null);

@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, Query
-from sqlmodel import Session, select
+from fastapi import APIRouter, Query
+from sqlmodel import select
 from sqlalchemy.orm import joinedload
 
-from database import get_db
+from deps import DbSession
 from models import Instrument, LogEntry
 from computed import get_instrument_state
 from enums import InstrumentStatus, LabelKey
@@ -12,8 +12,8 @@ from schemas import DashboardStats, ActivityEntry
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 
-@router.get("/stats", response_model=DashboardStats)
-def get_dashboard_stats(db: Session = Depends(get_db)):
+@router.get("/stats")
+def get_dashboard_stats(db: DbSession) -> DashboardStats:
     instruments = db.exec(select(Instrument)).all()
 
     status_counts = {s.value: 0 for s in InstrumentStatus}
@@ -40,11 +40,8 @@ def get_dashboard_stats(db: Session = Depends(get_db)):
     )
 
 
-@router.get("/activity", response_model=list[ActivityEntry])
-def get_recent_activity(
-    limit: int = Query(default=DASHBOARD_FEED_LIMIT),
-    db: Session = Depends(get_db),
-):
+@router.get("/activity")
+def get_recent_activity(db: DbSession, limit: int = Query(default=DASHBOARD_FEED_LIMIT)) -> list[ActivityEntry]:
     entries = db.exec(
         select(LogEntry)
         .options(joinedload(LogEntry.instrument), joinedload(LogEntry.contributor))

@@ -1,28 +1,27 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlmodel import Session, select
+from fastapi import APIRouter, HTTPException, Query
+from sqlmodel import select
 from sqlalchemy.orm import selectinload
 
-from database import get_db
+from deps import DbSession, OptionalAuth
 from models import Instrument, LogEntry, Contributor
 from computed import get_instrument_state
 from permissions import filter_log_for_view
-from routes.auth import get_session_data
 from schemas import (
-    SessionResponse, Capabilities, InstrumentSummary, InstrumentDetail,
-    LogEntryResponse, AttachmentResponse,
+    Capabilities, InstrumentSummary, InstrumentDetail,
+    LogEntryResponse, AttachmentResponse, InstrumentState,
 )
 
 router = APIRouter(prefix="/instruments", tags=["instruments"])
 
 
-def resolve_contributor_name(db: Session, contributor_id: str | None) -> str | None:
+def resolve_contributor_name(db: DbSession, contributor_id: str | None) -> str | None:
     if not contributor_id:
         return None
     contributor = db.get(Contributor, contributor_id)
     return contributor.name if contributor else None
 
 
-def build_log_entry_response(db: Session, entry: LogEntry, caps: Capabilities) -> LogEntryResponse:
+def build_log_entry_response(db: DbSession, entry: LogEntry, caps: Capabilities) -> LogEntryResponse:
     return LogEntryResponse(
         id=entry.id,
         type=entry.entry_type,
@@ -47,7 +46,7 @@ def build_log_entry_response(db: Session, entry: LogEntry, caps: Capabilities) -
     )
 
 
-def _build_summary(instrument: Instrument, state, log_count: int) -> InstrumentSummary:
+def _build_summary(instrument: Instrument, state: InstrumentState, log_count: int) -> InstrumentSummary:
     return InstrumentSummary(
         id=instrument.id,
         airtable_id=instrument.airtable_id,
@@ -62,7 +61,7 @@ def _build_summary(instrument: Instrument, state, log_count: int) -> InstrumentS
     )
 
 
-def build_instrument_detail(db: Session, instrument: Instrument, caps: Capabilities) -> InstrumentDetail:
+def build_instrument_detail(db: DbSession, instrument: Instrument, caps: Capabilities) -> InstrumentDetail:
     entries = db.exec(
         select(LogEntry)
         .where(LogEntry.instrument_id == instrument.id)
@@ -82,19 +81,18 @@ def build_instrument_detail(db: Session, instrument: Instrument, caps: Capabilit
     )
 
 
-@router.get("", response_model=list[InstrumentSummary])
+@router.get("")
 def list_instruments(
+    db: DbSession,
     filter: str = Query("all"),
     search: str = Query(""),
-    db: Session = Depends(get_db),
-):
+) -> list[InstrumentSummary]:
     instruments = db.exec(select(Instrument)).all()
     results: list[InstrumentSummary] = []
 
     for inst in instruments:
         state = get_instrument_state(db, inst.id)
 
-        # Apply filter before building the full summary
         if filter == "display_ready":
             if not state.display_ready:
                 continue
@@ -115,12 +113,8 @@ def list_instruments(
     return results
 
 
-@router.get("/{instrument_id}", response_model=InstrumentDetail)
-def get_instrument(
-    instrument_id: str,
-    db: Session = Depends(get_db),
-    session: SessionResponse | None = Depends(get_session_data),
-):
+@router.get("/{instrument_id}")
+def get_instrument(instrument_id: str, db: DbSession, session: OptionalAuth) -> InstrumentDetail:
     instrument = db.get(Instrument, instrument_id)
     if not instrument:
         raise HTTPException(404, "Instrument not found")

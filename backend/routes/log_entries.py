@@ -1,31 +1,31 @@
 import uuid
 from datetime import date, datetime
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, select
+from fastapi import APIRouter, HTTPException
+from sqlmodel import select
 from sqlalchemy.orm import selectinload
 
-from database import get_db
+from config import UPLOAD_DIR
+from deps import DbSession, Auth
 from models import Instrument, LogEntry, Attachment
 from computed import get_instrument_state
 from permissions import authorize_add_entry, enforce_guest_overrides, authorize_edit_entry, authorize_delete_entry
-from routes.auth import require_session
 from routes.instruments import build_instrument_detail, build_log_entry_response
 from schemas import (
-    SessionResponse, AddLogEntryRequest, EditLogEntryRequest,
+    AddLogEntryRequest, EditLogEntryRequest,
     AddLogEntryResponse, MutateInstrumentResponse,
 )
 
 router = APIRouter(prefix="/instruments/{instrument_id}/log", tags=["log_entries"])
 
 
-@router.post("", response_model=AddLogEntryResponse)
+@router.post("")
 def add_log_entry(
     instrument_id: str,
     body: AddLogEntryRequest,
-    db: Session = Depends(get_db),
-    session: SessionResponse = Depends(require_session),
-):
+    db: DbSession,
+    session: Auth,
+) -> AddLogEntryResponse:
     caps = session.capabilities
     has_status = body.status is not None
     has_labels = len(body.labels_added) > 0 or len(body.labels_removed) > 0
@@ -99,14 +99,14 @@ def add_log_entry(
     )
 
 
-@router.put("/{entry_id}", response_model=MutateInstrumentResponse)
+@router.put("/{entry_id}")
 def edit_log_entry(
     instrument_id: str,
     entry_id: str,
     body: EditLogEntryRequest,
-    db: Session = Depends(get_db),
-    session: SessionResponse = Depends(require_session),
-):
+    db: DbSession,
+    session: Auth,
+) -> MutateInstrumentResponse:
     caps = session.capabilities
     authorize_edit_entry(caps)
 
@@ -142,13 +142,13 @@ def edit_log_entry(
     )
 
 
-@router.delete("/{entry_id}", response_model=MutateInstrumentResponse)
+@router.delete("/{entry_id}")
 def delete_log_entry(
     instrument_id: str,
     entry_id: str,
-    db: Session = Depends(get_db),
-    session: SessionResponse = Depends(require_session),
-):
+    db: DbSession,
+    session: Auth,
+) -> MutateInstrumentResponse:
     caps = session.capabilities
     authorize_delete_entry(caps)
 
@@ -156,9 +156,19 @@ def delete_log_entry(
     if not instrument:
         raise HTTPException(404, "Instrument not found")
 
-    entry = db.get(LogEntry, entry_id)
+    entry = db.exec(
+        select(LogEntry)
+        .where(LogEntry.id == entry_id)
+        .options(selectinload(LogEntry.attachments))
+    ).first()
     if not entry or entry.instrument_id != instrument_id:
         raise HTTPException(404, "Log entry not found")
+
+    # Delete attachment files from disk and DB
+    for attachment in entry.attachments:
+        file_path = UPLOAD_DIR / attachment.file_path
+        file_path.unlink(missing_ok=True)
+        db.delete(attachment)
 
     db.delete(entry)
     db.commit()

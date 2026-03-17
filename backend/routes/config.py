@@ -31,6 +31,6 @@ def _build_config() -> ConfigResponse:
     )
 
 
-@router.get("/config", response_model=ConfigResponse)
-def get_config():
+@router.get("/config")
+def get_config() -> ConfigResponse:
     return _build_config()

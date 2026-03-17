@@ -1,26 +1,20 @@
 import uuid
 from datetime import datetime
 
-from fastapi import APIRouter, UploadFile, HTTPException, Depends
-from sqlmodel import Session
+from fastapi import APIRouter, UploadFile, HTTPException
 
 from config import UPLOAD_DIR
-from database import get_db
+from deps import DbSession, Auth
 from models import Attachment
-from routes.auth import require_session
-from schemas import SessionResponse, AttachmentResponse
+from schemas import AttachmentResponse
 
 router = APIRouter(prefix="/attachments", tags=["attachments"])
 
 MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
 
 
-@router.post("/upload", response_model=AttachmentResponse)
-async def upload_attachment(
-    file: UploadFile,
-    db: Session = Depends(get_db),
-    session: SessionResponse = Depends(require_session),
-):
+@router.post("/upload")
+async def upload_attachment(file: UploadFile, db: DbSession, session: Auth) -> AttachmentResponse:
     file_id = str(uuid.uuid4())
     ext = file.filename.rsplit(".", 1)[-1] if "." in file.filename else ""
     stored_name = f"{file_id}.{ext}" if ext else file_id

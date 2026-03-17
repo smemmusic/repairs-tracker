@@ -81,8 +81,19 @@ export async function submitEntry() {
     store.set('editingEntryId', null);
     _showToast('Log entry updated');
   } else {
-    // Create mode — send raw values, server handles change detection
+    // Create mode — upload files first, then create entry
     const { added: labelsAdded, removed: labelsRemoved } = partitionLabelActions(store.get('pendingLabels'));
+
+    const attachmentIds = [];
+    for (const staged of store.get('stagedFiles')) {
+      try {
+        const uploaded = await api.uploadAttachment(staged.file);
+        attachmentIds.push(uploaded.id);
+      } catch (e) {
+        alert(`Upload failed: ${e.message}`);
+        return;
+      }
+    }
 
     try {
       await api.addLogEntry(id, {
@@ -94,7 +105,7 @@ export async function submitEntry() {
         location: values.location || null,
         labelsAdded,
         labelsRemoved,
-        attachmentIds: store.get('stagedFiles').map(f => f.id),
+        attachmentIds,
       });
     } catch (e) {
       alert(e.message);
@@ -104,6 +115,7 @@ export async function submitEntry() {
   }
 
   // Clear form state and reset DOM so stale values don't get re-saved as a draft
+  store.get('stagedFiles').forEach(f => URL.revokeObjectURL(f.url));
   store.set('stagedFiles', []);
   store.set('pendingLabels', {});
   store.set('editingEntryId', null);
@@ -243,21 +255,16 @@ export function onLabelToggle(key, action) {
   }
 }
 
-export async function onFilesSelected() {
+export function onFilesSelected() {
   const input = document.getElementById('entryFiles');
   const stagedFiles = store.get('stagedFiles');
   for (const file of input.files) {
-    try {
-      const uploaded = await api.uploadAttachment(file);
-      stagedFiles.push({
-        id: uploaded.id,
-        name: uploaded.file_name,
-        type: uploaded.mime_type,
-        url: uploaded.url,
-      });
-    } catch (e) {
-      alert(`Upload failed: ${e.message}`);
-    }
+    stagedFiles.push({
+      file,  // raw File object — uploaded on submit
+      file_name: file.name,
+      mime_type: file.type,
+      url: URL.createObjectURL(file),  // local preview
+    });
   }
   store.set('stagedFiles', stagedFiles);
   input.value = '';
@@ -266,6 +273,7 @@ export async function onFilesSelected() {
 
 export function removeStagedFile(index) {
   const stagedFiles = store.get('stagedFiles');
+  URL.revokeObjectURL(stagedFiles[index].url);
   stagedFiles.splice(index, 1);
   store.set('stagedFiles', stagedFiles);
   form.renderAttachPreview(stagedFiles, removeStagedFile);

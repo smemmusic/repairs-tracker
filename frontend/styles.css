@@ -269,7 +269,10 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 .log-attach-thumb { width: 72px; height: 72px; border-radius: var(--radius); border: 1px solid var(--border2); overflow: hidden; background: var(--bg3); cursor: pointer; transition: border-color 0.12s; }
 .log-attach-thumb:hover { border-color: var(--amber-dim); }
 .log-attach-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.log-attach-thumb .attach-name { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; font-family: var(--mono); font-size: var(--fs-xs); color: var(--text3); text-align: center; padding: var(--sp-xs); word-break: break-all; }
+.log-attach-thumb .attach-name { font-family: var(--mono); font-size: var(--fs-xs); color: var(--text3); text-align: center; padding: 0 var(--sp-xs); word-break: break-all; overflow: hidden; line-height: 1.2; }
+.attach-file-icon { display: block; text-align: center; font-size: 24px; padding-top: var(--sp-sm); line-height: 1; }
+.attach-thumb .attach-file-icon { font-size: 18px; padding-top: var(--sp-xs); }
+.attach-thumb .attach-name { position: absolute; bottom: 2px; left: 2px; right: 2px; top: auto; font-size: 9px; text-align: center; }
 
 /* ── Login ──────────────────────────────────────────────────────────── */
 
