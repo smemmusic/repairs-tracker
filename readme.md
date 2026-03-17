@@ -1,14 +1,26 @@
 # SMEM — Repair Tracker
 
-## Running the prototype
+## Running the project
 
 ```
 git clone <repo-url>
-cd smem-repairs
-python -m http.server
+cd smem-repairs/backend
+uv sync
+uv run python seed.py
+uv run uvicorn main:app --reload --port 8000
 ```
 
 Then open http://localhost:8000
+
+The backend serves both the API (`/api/*`) and the frontend static files from `frontend/`.
+
+### Reset demo data
+
+```
+uv run python seed.py
+```
+
+Or via the API: `POST /api/admin/reset`
 
 ---
 
