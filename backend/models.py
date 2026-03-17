@@ -34,9 +34,9 @@ class LogEntry(SQLModel, table=True):
     __tablename__ = "log_entry"
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
-    instrument_id: str = Field(foreign_key="instrument.id")
+    instrument_id: str = Field(foreign_key="instrument.id", index=True)
     contributor_id: Optional[str] = Field(default=None, foreign_key="contributor.id")
-    performed_at: date
+    performed_at: date = Field(index=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     entry_type: EntryType
     notes: str

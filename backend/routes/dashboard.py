@@ -4,17 +4,21 @@ from sqlalchemy.orm import joinedload
 
 from deps import DbSession
 from models import Instrument, LogEntry
-from computed import get_instrument_state
+from computed import get_all_instrument_states
 from enums import InstrumentStatus, LabelKey
 from config import DASHBOARD_FEED_LIMIT
-from schemas import DashboardStats, ActivityEntry
+from schemas import DashboardStats, ActivityEntry, InstrumentState
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 
 @router.get("/stats")
 def get_dashboard_stats(db: DbSession) -> DashboardStats:
+    # 1 query: all instruments
     instruments = db.exec(select(Instrument)).all()
+
+    # 1 query: all states (bulk)
+    states = get_all_instrument_states(db)
 
     status_counts = {s.value: 0 for s in InstrumentStatus}
     label_counts = {l.value: 0 for l in LabelKey}
@@ -22,7 +26,9 @@ def get_dashboard_stats(db: DbSession) -> DashboardStats:
     needs_attention = 0
 
     for inst in instruments:
-        state = get_instrument_state(db, inst.id)
+        state = states.get(inst.id, InstrumentState(
+            status="unknown", score=None, labels=[], location=None, display_ready=False,
+        ))
         status_counts[state.status] = status_counts.get(state.status, 0) + 1
         if state.display_ready:
             display_ready += 1

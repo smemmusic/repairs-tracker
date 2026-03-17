@@ -86,16 +86,16 @@ def add_log_entry(
     db.commit()
     db.refresh(instrument)
 
-    # Re-query entry with attachments loaded
+    # Re-query entry with relationships loaded
     entry = db.exec(
         select(LogEntry)
         .where(LogEntry.id == entry.id)
-        .options(selectinload(LogEntry.attachments))
+        .options(selectinload(LogEntry.attachments), selectinload(LogEntry.contributor))
     ).one()
 
     return AddLogEntryResponse(
         instrument=build_instrument_detail(db, instrument, caps),
-        logEntry=build_log_entry_response(db, entry, caps),
+        logEntry=build_log_entry_response(entry, caps),
     )
 
 

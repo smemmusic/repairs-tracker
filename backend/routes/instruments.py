@@ -1,10 +1,12 @@
+from collections import defaultdict
+
 from fastapi import APIRouter, HTTPException, Query
-from sqlmodel import select
+from sqlmodel import select, func
 from sqlalchemy.orm import selectinload
 
 from deps import DbSession, OptionalAuth
-from models import Instrument, LogEntry, Contributor
-from computed import get_instrument_state
+from models import Instrument, LogEntry
+from computed import get_instrument_state, get_all_instrument_states, compute_state_from_entries
 from permissions import filter_log_for_view
 from schemas import (
     Capabilities, InstrumentSummary, InstrumentDetail,
@@ -14,20 +16,14 @@ from schemas import (
 router = APIRouter(prefix="/instruments", tags=["instruments"])
 
 
-def resolve_contributor_name(db: DbSession, contributor_id: str | None) -> str | None:
-    if not contributor_id:
-        return None
-    contributor = db.get(Contributor, contributor_id)
-    return contributor.name if contributor else None
-
-
-def build_log_entry_response(db: DbSession, entry: LogEntry, caps: Capabilities) -> LogEntryResponse:
+def build_log_entry_response(entry: LogEntry, caps: Capabilities) -> LogEntryResponse:
+    """Build a log entry response. Expects contributor relationship to be loaded."""
     return LogEntryResponse(
         id=entry.id,
         type=entry.entry_type,
         date=entry.performed_at,
         contributor_id=entry.contributor_id,
-        contributor_name=resolve_contributor_name(db, entry.contributor_id),
+        contributor_name=entry.contributor.name if entry.contributor else None,
         notes=entry.notes,
         status=entry.status,
         score=entry.condition_score if caps.viewScores else None,
@@ -62,13 +58,15 @@ def _build_summary(instrument: Instrument, state: InstrumentState, log_count: in
 
 
 def build_instrument_detail(db: DbSession, instrument: Instrument, caps: Capabilities) -> InstrumentDetail:
+    """Build full instrument detail. Used by single-instrument endpoints."""
     entries = db.exec(
         select(LogEntry)
         .where(LogEntry.instrument_id == instrument.id)
-        .options(selectinload(LogEntry.attachments))
+        .options(selectinload(LogEntry.attachments), selectinload(LogEntry.contributor))
         .order_by(LogEntry.performed_at.asc(), LogEntry.created_at.asc())
     ).all()
-    state = get_instrument_state(db, instrument.id)
+
+    state = compute_state_from_entries(entries)
     filtered = filter_log_for_view(entries, caps)
     summary = _build_summary(instrument, state, len(entries))
     data = summary.model_dump()
@@ -77,7 +75,7 @@ def build_instrument_detail(db: DbSession, instrument: Instrument, caps: Capabil
 
     return InstrumentDetail(
         **data,
-        log=[build_log_entry_response(db, e, caps) for e in filtered],
+        log=[build_log_entry_response(e, caps) for e in filtered],
     )
 
 
@@ -87,11 +85,24 @@ def list_instruments(
     filter: str = Query("all"),
     search: str = Query(""),
 ) -> list[InstrumentSummary]:
+    # 1 query: all instruments
     instruments = db.exec(select(Instrument)).all()
-    results: list[InstrumentSummary] = []
 
+    # 1 query: all states (bulk)
+    states = get_all_instrument_states(db)
+
+    # 1 query: all log counts
+    count_rows = db.exec(
+        select(LogEntry.instrument_id, func.count())
+        .group_by(LogEntry.instrument_id)
+    ).all()
+    log_counts = dict(count_rows)
+
+    results: list[InstrumentSummary] = []
     for inst in instruments:
-        state = get_instrument_state(db, inst.id)
+        state = states.get(inst.id, InstrumentState(
+            status="unknown", score=None, labels=[], location=None, display_ready=False,
+        ))
 
         if filter == "display_ready":
             if not state.display_ready:
@@ -105,10 +116,7 @@ def list_instruments(
             if q not in inst.display_name.lower() and not (inst.serial_number and q in inst.serial_number.lower()):
                 continue
 
-        log_count = len(db.exec(
-            select(LogEntry.id).where(LogEntry.instrument_id == inst.id)
-        ).all())
-        results.append(_build_summary(inst, state, log_count))
+        results.append(_build_summary(inst, state, log_counts.get(inst.id, 0)))
 
     return results
 

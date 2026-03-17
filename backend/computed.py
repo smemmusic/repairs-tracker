@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from sqlmodel import Session, select
 
 from models import LogEntry
@@ -14,6 +16,23 @@ def get_instrument_state(db: Session, instrument_id: str) -> InstrumentState:
         .order_by(LogEntry.performed_at.asc(), LogEntry.created_at.asc())
     ).all()
     return _compute_state(entries)
+
+
+def get_all_instrument_states(db: Session) -> dict[str, InstrumentState]:
+    """Bulk-compute state for all instruments in a single query."""
+    entries = db.exec(
+        select(LogEntry)
+        .order_by(LogEntry.performed_at.asc(), LogEntry.created_at.asc())
+    ).all()
+
+    grouped: dict[str, list[LogEntry]] = defaultdict(list)
+    for e in entries:
+        grouped[e.instrument_id].append(e)
+
+    return {
+        instrument_id: _compute_state(entries)
+        for instrument_id, entries in grouped.items()
+    }
 
 
 def compute_state_from_entries(entries: list[LogEntry]) -> InstrumentState:
