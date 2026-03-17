@@ -35,6 +35,7 @@ async def upload_attachment(
     # Save record (unlinked — log_entry_id set when log entry is created)
     attachment = Attachment(
         id=file_id,
+        uploaded_by=session.user.id if session.user else None,
         file_path=stored_name,
         file_name=file.filename,
         mime_type=file.content_type or "application/octet-stream",

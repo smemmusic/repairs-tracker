@@ -89,9 +89,14 @@ def add_log_entry(
     # Link uploaded attachments to this log entry
     for att_id in body.attachment_ids:
         attachment = db.get(Attachment, att_id)
-        if attachment:
-            attachment.log_entry_id = entry.id
-            db.add(attachment)
+        if not attachment:
+            raise HTTPException(400, f"Attachment not found: {att_id}")
+        if attachment.log_entry_id is not None:
+            raise HTTPException(400, f"Attachment already linked: {att_id}")
+        if attachment.uploaded_by != contributor_id:
+            raise HTTPException(403, f"Attachment not owned by this user: {att_id}")
+        attachment.log_entry_id = entry.id
+        db.add(attachment)
 
     db.commit()
     db.refresh(instrument)

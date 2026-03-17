@@ -60,6 +60,7 @@ class LogEntry(SQLModel, table=True):
 class Attachment(SQLModel, table=True):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     log_entry_id: Optional[str] = Field(default=None, foreign_key="log_entry.id")
+    uploaded_by: Optional[str] = Field(default=None, foreign_key="contributor.id")
     file_path: str
     file_name: str
     mime_type: str
