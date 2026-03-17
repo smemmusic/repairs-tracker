@@ -5,7 +5,7 @@ from deps import DbSession, Auth
 from models import Contributor
 from permissions import AUTHENTICATED_CAPABILITIES, GUEST_CAPABILITIES
 from config import DEMO_PASSWORD
-from schemas import LoginRequest, SessionResponse, UserResponse, LoginUser
+from schemas import LoginRequest, SessionResponse, UserResponse
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -45,12 +45,12 @@ def get_current_session(session: Auth) -> SessionResponse:
 
 
 @router.get("/users")
-def get_login_users(db: DbSession) -> list[LoginUser]:
+def get_login_users(db: DbSession) -> list[UserResponse]:
     """List contributors with Drupal accounts (for the login dropdown)."""
     contributors = db.exec(
         select(Contributor).where(Contributor.drupal_user_id.isnot(None))
     ).all()
-    return [LoginUser(id=c.drupal_user_id, name=c.name) for c in contributors]
+    return [UserResponse(id=c.drupal_user_id, name=c.name) for c in contributors]
 
 
 @router.post("/logout", status_code=204)

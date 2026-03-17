@@ -46,9 +46,6 @@ class UserResponse(BaseModel):
     name: str
 
 
-LoginUser = UserResponse
-
-
 class Capabilities(BaseModel):
     viewLogHistory: bool = False
     viewScores: bool = False
